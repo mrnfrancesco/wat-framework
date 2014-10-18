@@ -14,13 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from os.path import join, dirname
+
 
 class project(object):
     name = "WAT Framework"
     version = "0.0.1"
     description = None
     links = {
-        'sources': "https://github.com/mrnfrancesco/watframework",
+        'sources': "https://bitbucket.org/mrnfrancesco/wat-framework",
         'wiki': None,
         'doc': None,
     }
@@ -35,3 +37,22 @@ class author(object):
         'twitter': "http://twitter.com/mrnfrancesco",
         'linkedin': "http://it.linkedin.com/in/mrnfrancesco",
     }
+
+
+class dirs(object):
+
+    __slots__ = {'install', 'lib', 'modules', 'data', 'doc'}
+
+    install = dirname(dirname(__file__))
+    lib = join(install, 'lib')
+    modules = join(install, 'modules')
+    data = join(install, 'data')
+    doc = join(install, 'doc')
+
+
+class files(object):
+
+    __slots__ = {'database', 'useragents'}
+
+    database = join(dirs.modules, 'wat.db')
+    useragents = join(dirs.data, 'user-agents.lst')

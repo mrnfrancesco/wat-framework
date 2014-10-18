@@ -21,7 +21,7 @@ from it.mrnfrancesco.framework.wat.lib.exceptions import InvalidPropertyError, E
 
 class Property(object):
 
-    __NAME_PATTERN = re.compile(r'^(?:(?:[a-z]+[a-z0-9_]*[a-z0-9]+)::)*(?:[a-z]+[a-z0-9_]*[a-z0-9]+)$')
+    __NAME_PATTERN = re.compile(r'^(?:(?:[a-z]+[a-z0-9_]*[a-z0-9]+)\.)*(?:[a-z]+[a-z0-9_]*[a-z0-9]+)$')
 
     def __init__(self, name):
         """Create an instance of the property with the specified name to use in module specification.
@@ -53,12 +53,11 @@ class Operation(Property):
 
 class Constraint(Property):
 
-    def __init__(self, name, expected_value):
+    def __init__(self, name, expected, compare='eq'):
         super(Constraint, self).__init__(name)
-        if expected_value:
-            self.expected_value = expected_value
-        else:
-            raise EmptyValueError("expected_value", expected_value)
+        if expected is not None:
+            self.expected_value = expected
+        self.compare = compare
 
 
 def properties(parent, children):
@@ -67,12 +66,12 @@ def properties(parent, children):
     The following code is completely equivalent::
 
         #short version
-        Property.properties("aaa::bbb::ccc", ["ee", "ff", "gg"])
+        properties("aaa.bbb.ccc", ["ee", "ff", "gg"])
 
         #long version
-        Property("aaa::bbb::ccc::ee")
-        Property("aaa::bbb::ccc::ff")
-        Property("aaa::bbb::ccc::gg")
+        Property("aaa.bbb.ccc.ee")
+        Property("aaa.bbb.ccc.ff")
+        Property("aaa.bbb.ccc.gg")
 
     :param parent: the common properties parent
     :type parent: str
@@ -83,4 +82,4 @@ def properties(parent, children):
     :raise `PropertyNameSyntaxError`: if at least one of the resulting property name
                                     is not compliance with choosen naming convention
     """
-    return [Property("::".join([parent, child])) for child in children]
+    return [Property(".".join([parent, child])) for child in children]

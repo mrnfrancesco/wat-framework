@@ -14,66 +14,50 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from abc import ABCMeta, abstractmethod, abstractproperty
-import os
 
-from it.mrnfrancesco.framework.wat import conf
+from datetime import date
+
+from it.mrnfrancesco.framework.wat.lib.models import Author
+from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, Operation
 
 
-class AbstractBaseModule(object):
-    __metaclass__ = ABCMeta
-
-    # make all non-property class attribute 'read-only'
-    def __setattr__(self, key, value):
-        if key not in ['name', 'package', 'description']:
-            super(AbstractBaseModule, self).__setattr__(key, value)
+def info(authors, released, updated, provides, dependencies=None, version='unknown'):
+    def wrap(cls):
+        # write all the info parameters into class definition looking for misconfiguration
+        if all(isinstance(author, Author) for author in authors):
+            cls.authors = authors
         else:
-            raise AttributeError("'%s.%s' attribute is read-only" % (self.__class__.__name__, key))
+            raise AttributeError("all authors must be of type '%s'" % Author.__name__)
+        if isinstance(released, date):
+            cls.released = released
+        if isinstance(updated, date):
+            cls.updated = updated
+        if provides:  # check for at least one element
+            if all(isinstance(spec, (Property, Operation)) for spec in provides):
+                cls.provides = provides
+        if not dependencies:  # if None or empty, save as None
+            cls.dependencies = None
+        elif all(isinstance(spec, (Property, Constraint, Operation)) for spec in dependencies):
+            cls.dependencies = dependencies
+        # save the version as string, whatever type it really is
+        cls.version = str(version)
 
-    def __init__(self):
-        cls = self.__class__
-        # create and initialize class variable using subclass provided information
-        if not hasattr(cls, 'name'):
-            cls.name = cls.__name__
-        if not hasattr(cls, 'package'):
-            # TODO: check if the following line is right
-            # cls.package = cls.__module__
-            cls.package = os.getcwd().replace(conf.dirs.modules, '', 1).replace(os.sep, '.')[1:]
-        if not hasattr(cls, 'description'):
+        return cls
+    return wrap
+
+
+class MetaModule(type):
+
+    def __init__(cls, name, bases, attr):
+        super(MetaModule, cls).__init__(name, bases, attr)
+        cls.name = name
+        if cls.__doc__:
             cls.description = cls.__doc__
+        else:
+            raise AttributeError("missing description")
 
-    @property
-    def dependencies(self):
-        return None
-
-    @abstractproperty
-    def provides(self):
-        pass
-
-    @abstractproperty
-    def authors(self):
-        pass
-
-    @abstractproperty
-    def release_date(self):
-        pass
-
-    @abstractproperty
-    def last_update(self):
-        pass
-
-    @property
-    def version(self):
-        return 'unknown'
-
-    @abstractmethod
-    def run(self):
-        """Run the functional part of the module. It will provide all the information specified if all the dependencies
-        were satisfied.
-        """
-        pass
-
-    def check(self):
+    @staticmethod
+    def check():
         """Check if the module is able to run properly.
 
         :return: `True` if the module is able to run properly, `False` otherwise
@@ -83,6 +67,8 @@ class AbstractBaseModule(object):
         """
         raise NotImplementedError
 
+    @staticmethod
+    def run():
+        raise NotImplementedError
 
 # TODO: add :method:verify(), :method:install() and :method:uninstall()
-# TODO: convert abstract methods in template methods to do some exception handling (e.g. pycurl.error in run method)

@@ -14,28 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from os.path import join, dirname
 from pycurl import *
 
 from it.mrnfrancesco.framework import wat
-
-
-class dirs(object):
-
-    __slots__ = {'install', 'lib', 'modules', 'data', 'doc'}
-
-    install = dirname(__file__)
-    lib = join(install, 'lib')
-    modules = join(install, 'modules')
-    data = join(install, 'data')
-    doc = join(install, 'doc')
-
-class files(object):
-
-    __slots__ = {'database', 'useragents'}
-
-    database = join(dirs.modules, 'wat.db')
-    useragents = join(dirs.data, 'user-agents.lst')
 
 
 class clients(object):
