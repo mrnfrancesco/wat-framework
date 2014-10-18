@@ -25,7 +25,8 @@ class project(object):
     description = None
     links = {
         'sources': "https://bitbucket.org/mrnfrancesco/wat-framework",
-        'wiki': None,
+        'issues': "https://bitbucket.org/mrnfrancesco/wat-framework/issues",
+        'wiki': "https://bitbucket.org/mrnfrancesco/wat-framework/wiki",
         'doc': None,
     }
 
