@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import os
 
 __all__ = ['project', 'author', 'dirs', 'files']
 
@@ -59,3 +60,12 @@ class files(object):
 
     database = join(dirs.modules, 'wat.db')
     useragents = join(dirs.data, 'user-agents.lst')
+
+
+class package(object):
+
+    __slots__ = {'modules'}
+
+    base = __name__  # it stands for "it.mrnfrancesco.framework.wat"
+    modules = '.'.join([base, 'modules'])
+
