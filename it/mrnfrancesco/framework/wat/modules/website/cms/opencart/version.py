@@ -16,14 +16,16 @@
 
 __all__ = ['GetVersionByFooter']
 
+__versions__ = ['1.5.4', '1.5.4.1', '1.5.5.1', '1.5.6', '1.5.6.1', '1.5.6.2', '1.5.6.3', '1.5.6.4', '2.0.0.0']
+__last_version__ = __versions__[-1]
+
 from datetime import date
 from pycurl import *
+import re
 
-from it.mrnfrancesco.framework.wat.lib.modules import MetaModule, info
+from it.mrnfrancesco.framework.wat.lib.modules import MetaModule, info, WatModule
 from it.mrnfrancesco.framework.wat.lib.models import Author
 from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint
-from it.mrnfrancesco.framework.wat.lib import clients
-from it.mrnfrancesco.framework.wat.modules.website import cms
 
 
 @info(
@@ -37,22 +39,63 @@ from it.mrnfrancesco.framework.wat.modules.website import cms
         Property("website.cms.opencart.version"),
     ],
     dependencies=[
-        Constraint("website.cms.name", cms.Name("opencart"), 'eq'),
+        Constraint("website.cms.name", "opencart", 'eq'),
         Property("website.cms.opencart.admin.directory"),
     ]
 )
-class GetVersionByFooter(object):
-    """This module provide the OpenCart exact version by looking at the admin page footer unless it is disabled."""
+class GetVersionByFooter(WatModule):
+    """This module provide the OpenCart exact version by looking at the admin page footer unless it was disabled."""
     __metaclass__ = MetaModule
 
-    @staticmethod
-    def check():
-        return True
+    __NEW_FOOTER_REGEX = r'<footer id="footer">'
+    __OLD_FOOTER_REGEX = r'<div id="footer">' \
+                         r'<a href="http://www\.opencart\.com">OpenCart</a>' \
+                         r' &copy; 2009-2014 All Rights Reserved\.' \
+                         r'<br />Version (?P<version>1\.5\.(?:\d\.)?\d)</div>'
 
-    @staticmethod
-    def run():
-        curl = clients.Curl()
-        _ = curl.setopt
+    def __init__(self):
+        super(GetVersionByFooter, self).__init__()
+        _ = self.curl.setopt
         _(URL, "localhost")
         _(PORT, 1234)
-        # curl.perform()
+        self.body = None
+        _(WRITEDATA, self.body)
+        self.ver = None
+
+    def __pick_version(self):
+        match = re.match(self.__OLD_FOOTER_REGEX, self.response)
+        if match is not None:
+            ver = match.group('version')
+            if ver in __versions__:
+                self.ver = ver
+        elif re.match(self.__NEW_FOOTER_REGEX, self.response):
+            self.ver = __last_version__
+        return self.ver
+
+
+    def check(self):
+        self.curl.perform()
+        if self.curl.getinfo(HTTP_CODE) is 200:
+            if not self.response:
+                return False
+            elif self.__pick_version() is None:
+                return False
+            else:
+                return True
+
+    def run(self):
+        if self.ver is not None:  # already got it
+            # TODO: set it in some way in the global registry
+            return
+        else:
+            self.curl.perform()
+            if self.curl.getinfo(HTTP_CODE) is 200:
+                if not self.response:
+                    raise  # TODO: found a proper error to raise
+                elif self.__pick_version() is not None:
+                        # TODO: set `self.ver` in some way in the global registry
+                        return
+                else:
+                    raise  # TODO: raise a sort of ModuleFailure error
+            else:
+                raise  # TODO: raise the proper error to say something like 'it is not module fault, it's website one'

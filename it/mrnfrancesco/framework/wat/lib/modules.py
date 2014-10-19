@@ -20,6 +20,8 @@ from datetime import date
 
 from it.mrnfrancesco.framework.wat.lib.models import Author
 from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, Operation
+from it.mrnfrancesco.framework.wat.lib.exceptions import NotSupportedError
+from it.mrnfrancesco.framework.wat.lib import clients
 
 
 def info(authors, released, updated, provides, dependencies=None, version='unknown'):
@@ -56,9 +58,9 @@ class MetaModule(type):
             cls.description = cls.__doc__
         else:
             raise AttributeError("missing description")
+        cls.__checkable__ = hasattr(cls, 'check')
 
-    @staticmethod
-    def check():
+    def check(self):
         """Check if the module is able to run properly.
 
         :return: `True` if the module is able to run properly, `False` otherwise
@@ -68,8 +70,27 @@ class MetaModule(type):
         """
         raise NotImplementedError
 
-    @staticmethod
-    def run():
+    def run(self):
         raise NotImplementedError
+
+
+class WatModule(object):
+
+    def __init__(self):
+        self.curl = clients.Curl()
+        self.setopt = self.curl.setopt
+
+    def __enter__(self):
+        if self.__checkable__:
+            try:
+                self.check()
+            except NotSupportedError:
+                # TODO: add some logging here
+                pass  # go ahead and try to run the module
+
+        return self.run()
+
+    def __exit__(self, exc_type, value, traceback):
+        self.curl.close()
 
 # TODO: add :method:verify(), :method:install() and :method:uninstall()
