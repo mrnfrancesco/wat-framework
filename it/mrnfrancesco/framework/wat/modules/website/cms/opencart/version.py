@@ -23,7 +23,7 @@ from datetime import date
 from pycurl import *
 import re
 
-from it.mrnfrancesco.framework.wat.lib.modules import MetaModule, info, WatModule
+from it.mrnfrancesco.framework.wat.lib.modules import *
 from it.mrnfrancesco.framework.wat.lib.models import Author
 from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint
 
@@ -71,7 +71,6 @@ class GetVersionByFooter(WatModule):
         elif re.match(self.__NEW_FOOTER_REGEX, self.response):
             self.ver = __last_version__
         return self.ver
-
 
     def check(self):
         self.curl.perform()

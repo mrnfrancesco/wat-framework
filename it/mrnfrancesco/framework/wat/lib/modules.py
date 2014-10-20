@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ['info', 'MetaModule']
+__all__ = ['info', 'MetaModule', 'WatModule']
 
 from datetime import date
 
@@ -93,4 +93,4 @@ class WatModule(object):
     def __exit__(self, exc_type, value, traceback):
         self.curl.close()
 
-# TODO: add :method:verify(), :method:install() and :method:uninstall()
+# TODO: add :method:verify()
