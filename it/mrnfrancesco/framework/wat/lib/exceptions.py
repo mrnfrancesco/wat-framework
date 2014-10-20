@@ -66,7 +66,7 @@ NON_FIELD_ERRORS = '__all__'
 class ValidationError(Exception):
     """An error while validating data."""
 
-    def __init__(self, message, code=None, params=None):
+    def __init__(self, message, params=None, code=None):
         """
         The `message` argument can be a single error, a list of errors, or a
         dictionary that maps field names to lists of errors. What we define as
@@ -76,7 +76,7 @@ class ValidationError(Exception):
         of ValidationError with its `error_list` or `error_dict` attribute set.
         """
 
-        super(ValidationError, self).__init__(message, code, params)
+        super(ValidationError, self).__init__(message, params, code)
 
         if isinstance(message, ValidationError):
             if hasattr(message, 'error_dict'):
@@ -84,7 +84,7 @@ class ValidationError(Exception):
             elif not hasattr(message, 'code'):
                 message = message.error_list
             else:
-                message, code, params = message.message, message.code, message.params
+                message, params, code = message.message, message.params, message.code
 
         if isinstance(message, dict):
             self.error_dict = {}
@@ -103,8 +103,8 @@ class ValidationError(Exception):
 
         else:
             self.message = message
-            self.code = code
             self.params = params
+            self.code = code
             self.error_list = [self]
 
     @property
@@ -151,11 +151,14 @@ class ValidationError(Exception):
 
 class ImproperlyConfigured(ValidationError):
     """WAT Framework is somehow improperly configured"""
+    def __init__(self, message, params=None):
+        super(ImproperlyConfigured, self).__init__(message, params, code='misconfigured')
 
 
 class InvalidPropertyError(PropertyError, ValidationError):
     def __init__(self, message, params=None):
-        super(InvalidPropertyError, self).__init__(message=message, params=params, code='invalid')
+        super(InvalidPropertyError, self).__init__(message, params, code='invalid')
+
 
 class EmptyValueError(ValidationError):
     def __init__(self, param, given):

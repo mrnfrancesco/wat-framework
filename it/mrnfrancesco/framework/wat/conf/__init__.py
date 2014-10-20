@@ -19,8 +19,10 @@ __all__ = ['clients']
 from pycurl import *
 
 from it.mrnfrancesco.framework import wat
+from it.mrnfrancesco.framework.wat.lib.helpers import Singleton
 
 
+@Singleton
 class clients(object):
     # TODO: finish to write the documentation (above class too)
     """
