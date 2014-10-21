@@ -59,23 +59,27 @@ class GetVersionByFooter(WatModule):
         _(URL, "localhost")
         _(PORT, 1234)
         self.body = None
-        _(WRITEDATA, self.body)
+
+        def body(string):
+            self.body = string
+
+        _(WRITEFUNCTION, body)
         self.ver = None
 
     def __pick_version(self):
-        match = re.match(self.__OLD_FOOTER_REGEX, self.response)
+        match = re.search(self.__OLD_FOOTER_REGEX, self.body)
         if match is not None:
             ver = match.group('version')
             if ver in __versions__:
                 self.ver = ver
-        elif re.match(self.__NEW_FOOTER_REGEX, self.response):
-            self.ver = __last_version__
+        elif re.search(self.__NEW_FOOTER_REGEX, self.body):
+            self.ver = '2.0.0.0'
         return self.ver
 
     def check(self):
         self.curl.perform()
         if self.curl.getinfo(HTTP_CODE) is 200:
-            if not self.response:
+            if not self.body:
                 return False
             elif self.__pick_version() is None:
                 return False
@@ -89,7 +93,7 @@ class GetVersionByFooter(WatModule):
         else:
             self.curl.perform()
             if self.curl.getinfo(HTTP_CODE) is 200:
-                if not self.response:
+                if not self.body:
                     raise  # TODO: found a proper error to raise
                 elif self.__pick_version() is not None:
                         # TODO: set `self.ver` in some way in the global registry
