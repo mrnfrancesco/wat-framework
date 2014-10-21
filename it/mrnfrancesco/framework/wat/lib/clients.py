@@ -24,10 +24,10 @@ from it.mrnfrancesco.framework.wat.lib.exceptions import ImproperlyConfigured
 
 def __initializedcurl(cls):
     curl = cls()
-    for option in conf.clients().__slots__:
+    for option in conf.clients.instance().__slots__:
         if hasattr(conf.clients, option) and hasattr(pycurl, option):
             try:
-                curl.setopt(getattr(pycurl, option), getattr(conf.clients(), option))
+                curl.setopt(getattr(pycurl, option), getattr(conf.clients.instance(), option))
             except TypeError as e:
                 raise ImproperlyConfigured(
                     message=e.message + " (option: %(option)s)",

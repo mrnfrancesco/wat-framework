@@ -19,7 +19,7 @@ __all__ = ['clients']
 from pycurl import *
 
 from it.mrnfrancesco.framework import wat
-from it.mrnfrancesco.framework.wat.lib.helpers import Singleton
+from singleton.singleton import Singleton
 
 
 @Singleton
