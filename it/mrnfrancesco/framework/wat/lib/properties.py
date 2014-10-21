@@ -14,12 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ['Property', 'Constraint', 'Operation']
+__all__ = ['Registry', 'Property', 'Constraint', 'Operation']
 
 import re
 
+from singleton.singleton import Singleton
 from it.mrnfrancesco.framework.wat.lib.exceptions import InvalidPropertyError, EmptyValueError
 
+
+@Singleton
+class Registry(dict):
+    pass
 
 class Property(object):
 

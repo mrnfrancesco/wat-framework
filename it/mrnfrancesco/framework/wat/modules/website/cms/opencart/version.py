@@ -33,11 +33,9 @@ from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint
         Author(email="francesco.mrn24@gmail.com", name="Francesco Marano", nickname="mrnfrancesco"),
     ],
     released=date(2014, 10, 18),
-    updated=date(2014, 10, 18),
+    updated=date(2014, 10, 21),
     version='0.0.1',
-    provides=[
-        Property("website.cms.opencart.version"),
-    ],
+    provides=['version'],
     dependencies=[
         Constraint("website.cms.name", "opencart", 'eq'),
         Property("website.cms.opencart.admin.directory"),
@@ -89,15 +87,14 @@ class GetVersionByFooter(WatModule):
     def run(self):
         if self.ver is not None:  # already got it
             # TODO: set it in some way in the global registry
-            return
+            return {'version': self.ver}
         else:
             self.curl.perform()
             if self.curl.getinfo(HTTP_CODE) is 200:
                 if not self.body:
                     raise  # TODO: found a proper error to raise
                 elif self.__pick_version() is not None:
-                        # TODO: set `self.ver` in some way in the global registry
-                        return
+                    return {'version': self.ver}
                 else:
                     raise  # TODO: raise a sort of ModuleFailure error
             else:

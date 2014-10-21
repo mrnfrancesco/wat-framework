@@ -19,8 +19,8 @@ __all__ = ['info', 'MetaModule', 'WatModule']
 from datetime import date
 
 from it.mrnfrancesco.framework.wat.lib.models import Author
-from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, Operation
-from it.mrnfrancesco.framework.wat.lib.exceptions import NotSupportedError
+from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, Operation, Registry
+from it.mrnfrancesco.framework.wat.lib.exceptions import NotSupportedError, ImproperlyConfigured
 from it.mrnfrancesco.framework.wat.lib import clients
 
 
@@ -36,7 +36,7 @@ def info(authors, released, updated, provides, dependencies=None, version='unkno
         if isinstance(updated, date):
             cls.updated = updated
         if provides:  # check for at least one element
-            if all(isinstance(spec, (Property, Operation)) for spec in provides):
+            if all(isinstance(spec, str) for spec in provides):
                 cls.provides = provides
         if not dependencies:  # if None or empty, save as None
             cls.dependencies = None
@@ -88,7 +88,34 @@ class WatModule(object):
                 # TODO: add some logging here
                 pass  # go ahead and try to run the module
 
-        return self.run()
+        provided = self.run()
+        if not isinstance(provided, dict):
+            raise ImproperlyConfigured(
+                message="run method must return a dict, got %(ret_type)s instead",
+                params={'ret_type': type(provided)}
+            )
+
+        if set(provided.keys()).isdisjoint(self.provides):
+            raise ImproperlyConfigured("'provides' list and provided properties does not match")
+
+        if len(provided) is not len(self.provides):
+            if len(provided) > len(self.provides):
+                raise ImproperlyConfigured(
+                    message="all provided properties must be made explicit, some missing (%(missing)s)",
+                    params={'missing': list(set(provided.keys()).difference(self.provides))}
+                )
+            else:
+                raise ImproperlyConfigured(
+                    message="all properties in 'provides' list must be given, some missing (%(missing)s)",
+                    params={'missing': list(set(self.provides).difference(provided.keys()))}
+                )
+
+        # TODO list for saving retrieved properties:
+        # 1. get module package, module name and properties name
+        # 2. concatenate those strings
+        # 3. save values in Registry.instance() dictionary
+
+        return self
 
     def __exit__(self, exc_type, value, traceback):
         self.curl.close()
