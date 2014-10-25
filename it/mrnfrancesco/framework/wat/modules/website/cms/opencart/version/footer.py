@@ -14,18 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ['GetVersionByFooter']
-
-__versions__ = ['1.5.4', '1.5.4.1', '1.5.5.1', '1.5.6', '1.5.6.1', '1.5.6.2', '1.5.6.3', '1.5.6.4', '2.0.0.0']
-__last_version__ = __versions__[-1]
-
 from datetime import date
 from pycurl import *
 import re
 
+from it.mrnfrancesco.framework.wat import conf
 from it.mrnfrancesco.framework.wat.lib.modules import *
 from it.mrnfrancesco.framework.wat.lib.models import Author
-from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint
+from it.mrnfrancesco.framework.wat.modules.website.cms.opencart.version import *
+from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, Registry
 
 
 @info(
@@ -35,7 +32,6 @@ from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint
     released=date(2014, 10, 18),
     updated=date(2014, 10, 21),
     version='0.0.1',
-    provides=['version'],
     dependencies=[
         Constraint("website.cms.name", "opencart", 'eq'),
         Property("website.cms.opencart.admin.directory"),
@@ -53,15 +49,20 @@ class GetVersionByFooter(WatModule):
 
     def __init__(self):
         super(GetVersionByFooter, self).__init__()
-        _ = self.curl.setopt
-        _(URL, "localhost")
-        _(PORT, 1234)
-        self.body = None
 
-        def body(string):
-            self.body = string
+        # the following 2 line should not exists here! just for debug purpose
+        conf.clients.instance().URL = "http://localhost/opencart-1.5.6.4/"
+        Registry.instance()["website.cms.opencart.admin.directory"] = "admin/"
 
-        _(WRITEFUNCTION, body)
+        from urlparse import urljoin
+
+        admin_url = urljoin(
+            conf.clients.instance().URL,
+            self.getdependency("website.cms.opencart.admin.directory")
+        )
+
+        self.setopt(URL, admin_url)
+        self.setopt(WRITEFUNCTION, self.save_as_attribute('body'))
         self.ver = None
 
     def __pick_version(self):
@@ -86,15 +87,14 @@ class GetVersionByFooter(WatModule):
 
     def run(self):
         if self.ver is not None:  # already got it
-            # TODO: set it in some way in the global registry
-            return {'version': self.ver}
+            return self.ver
         else:
             self.curl.perform()
             if self.curl.getinfo(HTTP_CODE) is 200:
                 if not self.body:
-                    raise  # TODO: found a proper error to raise
+                    raise  # TODO: found a proper error to raise (empty response like)
                 elif self.__pick_version() is not None:
-                    return {'version': self.ver}
+                    return self.ver
                 else:
                     raise  # TODO: raise a sort of ModuleFailure error
             else:

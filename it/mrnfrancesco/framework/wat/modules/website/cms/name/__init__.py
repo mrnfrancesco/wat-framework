@@ -13,3 +13,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+__modules__ = ['bruteforce']
+
+
+__all__ = ['__names__']
+
+__names__ = ['opencart', 'wordpress', 'joomla', 'drupal', 'magento']
