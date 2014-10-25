@@ -1,0 +1,45 @@
+How you can contribute
+----------------------------
+
+1. Send new/missing modules
+
+   Search for modules' dependencies which are not available.
+   Research possible implementation.
+   Give the community your findings.
+
+
+2. Source Code Review & Extensive Testing
+
+   Review the source code for the best programming practices
+   to avoid unforeseen exceptions or warning messages.
+
+   This is what you make the scanner better and better.
+
+
+3. Develop User Interfaces
+
+   Listen to your/community needed for user interfaces.
+   Develop your own user interface.
+   Give the community your findings and make your UI an official WAT Framework UI.
+
+
+4. Report any issue/bug/advice
+
+    If you find some issues, bugs or even some strange error messages,
+    try to figure where the problem come from to solve it and publish
+    your patches.
+
+    If you are not able to write a patch, please report your detailed findings
+    at https://bitbucket.org/mrnfrancesco/wat-framework/issues .
+
+    Use the link above if you have some advice too.
+
+
+5. Donation
+
+   Developing this project has been costing a lot of days, effort
+   and research.
+
+   If WAT Framework is helping you,
+   or if you want to see more and more modules come to you with next update,
+   please consider donating your desired amount to the project via PayPal.

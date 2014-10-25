@@ -1,0 +1,58 @@
+
+WAT Framework README
+
+Copyright (c) 2014 Francesco Marano <francesco.mrn24@gmail.com>
+
+================================================================
+
+Description
+===========
+
+TODO: write down some description here
+
+
+DOWNLOAD LINKS
+================
+Primary
+https://bitbucket.org/mrnfrancesco/wat-framework/get/watframework-latest.zip
+
+TODO: change primary download link with a consistent one and add some mirror links
+
+HOW TO UPDATE
+===============
+GIT clone is always recommended more than checking from the framework which is
+good for new modules updates and slight changes in the framework itself.
+
+For the GIT updates use:
+
+git clone https://mrnfrancesco@bitbucket.org/mrnfrancesco/wat-framework.git wat-framework
+OR
+git clone git@bitbucket.org:mrnfrancesco/wat-framework.git wat-framework
+
+For the "from-framework" updates use:
+
+watf.py update
+
+
+OTHER INTERFACES
+================
+There are no known user interfaces, but you could write your own and publish it
+to make it the official one.
+Give a look at doc/CONTRIBUTE to know how you can contribute to make
+WAT Framework better and better.
+
+GENERAL NOTE
+============
+Result files are saved as TARGET-joexploit.htm or TARGET-joexploit.txt
+under report/ directory of joomscan.pl .
+
+You're recommended to check updates once a month at least.
+
+WAT Framework is not perfect. You're requested to post any issues/bugs/advices.
+Give a look at doc/CONTRIBUTE to know how to do it.
+
+I included my modules in the framework.
+I'm sure there are thousands more implementable out there.
+So when you're free, code some modules and let the community know your nice finds.
+
+Finally, full disclosure is the only way to stop the hole or worsen the world.
