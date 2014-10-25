@@ -16,15 +16,18 @@
 
 __all__ = ['info', 'MetaModule', 'WatModule']
 
+import os
+import pycurl
 from datetime import date
 
-from it.mrnfrancesco.framework.wat.lib.models import Author
-from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, Operation, Registry
-from it.mrnfrancesco.framework.wat.lib.exceptions import NotSupportedError, ImproperlyConfigured
+from it.mrnfrancesco.framework import wat
 from it.mrnfrancesco.framework.wat.lib import clients
+from it.mrnfrancesco.framework.wat.lib.properties import *
+from it.mrnfrancesco.framework.wat.lib.models import Author
+from it.mrnfrancesco.framework.wat.lib.exceptions import NotSupportedError, ImproperlyConfigured
 
 
-def info(authors, released, updated, provides, dependencies=None, version='unknown'):
+def info(authors, released, updated, dependencies=None, version='unknown'):
     def wrap(cls):
         # write all the info parameters into class definition looking for misconfiguration
         if all(isinstance(author, Author) for author in authors):
@@ -35,13 +38,15 @@ def info(authors, released, updated, provides, dependencies=None, version='unkno
             cls.released = released
         if isinstance(updated, date):
             cls.updated = updated
-        if provides:  # check for at least one element
-            if all(isinstance(spec, str) for spec in provides):
-                cls.provides = provides
         if not dependencies:  # if None or empty, save as None
             cls.dependencies = None
         elif all(isinstance(spec, (Property, Constraint, Operation)) for spec in dependencies):
             cls.dependencies = dependencies
+        else:
+            raise AttributeError(
+                "dependency type must be one of '%s, %s, %s'" %
+                (Property.__name__, Constraint.__name__, Operation.__name__)
+            )
         # save the version as string, whatever type it really is
         cls.version = str(version)
 
@@ -59,6 +64,14 @@ class MetaModule(type):
         else:
             raise AttributeError("missing description")
         cls.__checkable__ = hasattr(cls, 'check')
+
+        # A little hack to add WAT package available to every module class
+        module = __import__(cls.__module__)
+        filename, _ = os.path.splitext(module.__file__)
+        filename = filename.replace(wat.dirs.modules, '')
+        filename = filename.rpartition(os.path.sep)[0]
+        cls.property_name = filename.replace(os.path.sep, '.')[1:]
+        del module
 
     def check(self):
         """Check if the module is able to run properly.
@@ -83,41 +96,44 @@ class WatModule(object):
     def __enter__(self):
         if self.__checkable__:
             try:
-                self.check()
+                if self.check() is False:
+                    raise  # raise error to say 'this module cannot run'
             except NotSupportedError:
                 # TODO: add some logging here
                 pass  # go ahead and try to run the module
 
-        provided = self.run()
-        if not isinstance(provided, dict):
-            raise ImproperlyConfigured(
-                message="run method must return a dict, got %(ret_type)s instead",
-                params={'ret_type': type(provided)}
-            )
+        try:
+            provided = self.run()
+        except pycurl.error as error:
+            raise error  # raise a proper wrapper error
 
-        if set(provided.keys()).isdisjoint(self.provides):
-            raise ImproperlyConfigured("'provides' list and provided properties does not match")
+        if hasattr(self, '__provides__'):  # if more values should be provided
+            provides = __import__(self.property_name, fromlist=['__provides__'])
+            if isinstance(provided, dict):  # provided properties must be a dict consistent with __provides__
 
-        if len(provided) is not len(self.provides):
-            if len(provided) > len(self.provides):
-                raise ImproperlyConfigured(
-                    message="all provided properties must be made explicit, some missing (%(missing)s)",
-                    params={'missing': list(set(provided.keys()).difference(self.provides))}
-                )
-            else:
-                raise ImproperlyConfigured(
-                    message="all properties in 'provides' list must be given, some missing (%(missing)s)",
-                    params={'missing': list(set(self.provides).difference(provided.keys()))}
-                )
+                if set(provided.keys()).isdisjoint(provides):
+                    raise ImproperlyConfigured("'__provides__' list and provided properties does not match")
 
-        # TODO list for saving retrieved properties:
-        # 1. get module package, module name and properties name
-        # 2. concatenate those strings
-        # 3. save values in Registry.instance() dictionary
+                if len(provided) is not len(provides):
+                    if len(provided) > len(provides):
+                        raise ImproperlyConfigured(
+                            message="only properties in '__provides__' list must be returned, extra %(properties)s",
+                            params={'properties': list(set(provided.keys()).difference(provides))}
+                        )
+                    else:
+                        raise ImproperlyConfigured(
+                            message="all properties in '__provides__' list must be returned, missing %(properties)s",
+                            params={'properties': list(set(provides).difference(provided.keys()))}
+                        )
+
+        # 'provided' seems good. Let's save them!
+        Registry.instance()[self.property_name] = provided
 
         return self
 
     def __exit__(self, exc_type, value, traceback):
         self.curl.close()
 
-# TODO: add :method:verify()
+    # Some useful functions to avoid module developer to know about some hack
+    getdependency = staticmethod(lambda prop: Registry.instance()[prop])
+    save_as_attribute = lambda self, name: lambda value: self.__setattr__(name, value)

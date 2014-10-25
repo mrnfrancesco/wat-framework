@@ -16,9 +16,9 @@
 
 __all__ = ['Registry', 'Property', 'Constraint', 'Operation']
 
-import re
-
 from singleton.singleton import Singleton
+
+from it.mrnfrancesco.framework import wat
 from it.mrnfrancesco.framework.wat.lib.exceptions import InvalidPropertyError, EmptyValueError
 
 
@@ -26,9 +26,8 @@ from it.mrnfrancesco.framework.wat.lib.exceptions import InvalidPropertyError, E
 class Registry(dict):
     pass
 
-class Property(object):
 
-    __NAME_PATTERN = re.compile(r'^(?:(?:[a-z]+[a-z0-9_]*[a-z0-9]+)\.)*(?:[a-z]+[a-z0-9_]*[a-z0-9]+)$')
+class Property(object):
 
     def __init__(self, name):
         """Create an instance of the property with the specified name to use in module specification.
@@ -36,16 +35,14 @@ class Property(object):
         :param name: the name of the property to represent.
         :raise PropertyNameSyntaxError: if the property name is not compliance with choosen naming convention.
         """
-        if Property.__NAME_PATTERN.match(name):
+        try:
+            __import__('.'.join([wat.package.modules, name]))
             self.name = name
-        else:
+        except ImportError:
             raise InvalidPropertyError(name)
 
     def __str__(self):
-        if hasattr(self, 'value') and self.value:
-            return "%s=%s" % (self.name, self.value)
-        else:
-            return self.name
+        return self.name
 
 
 class Operation(Property):

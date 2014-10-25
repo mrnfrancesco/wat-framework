@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 
-__all__ = ['project', 'author', 'dirs', 'files']
+__all__ = ['project', 'author', 'dirs', 'files', 'package']
 
 from os.path import join, dirname
 
@@ -47,7 +47,7 @@ class dirs(object):
 
     __slots__ = {'install', 'lib', 'modules', 'data', 'doc'}
 
-    install = dirname(dirname(__file__))
+    install = dirname(__file__)
     lib = join(install, 'lib')
     modules = join(install, 'modules')
     data = join(install, 'data')
@@ -64,7 +64,7 @@ class files(object):
 
 class package(object):
 
-    __slots__ = {'modules'}
+    __slots__ = {'base', 'modules'}
 
     base = __name__  # it stands for "it.mrnfrancesco.framework.wat"
     modules = '.'.join([base, 'modules'])
