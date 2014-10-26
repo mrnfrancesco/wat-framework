@@ -18,6 +18,7 @@ __all__ = ['info', 'MetaModule', 'WatModule']
 
 import os
 import pycurl
+import importlib
 from datetime import date
 
 from it.mrnfrancesco.framework import wat
@@ -65,8 +66,8 @@ class MetaModule(type):
             raise AttributeError("missing description")
         cls.__checkable__ = hasattr(cls, 'check')
 
-        # A little hack to add WAT package available to every module class
-        module = __import__(cls.__module__)
+        # A little hack to add provided property available to every module class
+        module = importlib.import_module(cls.__module__)
         filename, _ = os.path.splitext(module.__file__)
         filename = filename.replace(wat.dirs.modules, '')
         filename = filename.rpartition(os.path.sep)[0]
@@ -108,6 +109,7 @@ class WatModule(object):
             raise error  # raise a proper wrapper error
 
         if hasattr(self, '__provides__'):  # if more values should be provided
+            # TODO: check this import (it should NOT works!)
             provides = __import__(self.property_name, fromlist=['__provides__'])
             if isinstance(provided, dict):  # provided properties must be a dict consistent with __provides__
 
@@ -135,5 +137,10 @@ class WatModule(object):
         self.curl.close()
 
     # Some useful functions to avoid module developer to know about some hack
-    getdependency = staticmethod(lambda prop: Registry.instance()[prop])
+    @staticmethod
+    def provide(prop, value):
+        if prop not in Registry.instance():
+            Registry.instance()[prop] = value
+
+    getdependency = staticmethod(lambda prop: Registry.instance()[prop] if prop in Registry.instance() else None)
     save_as_attribute = lambda self, name: lambda value: self.__setattr__(name, value)

@@ -61,7 +61,7 @@ class Constraint(Property):
         super(Constraint, self).__init__(name)
         if expected is not None:
             self.expected_value = expected
-        self.compare = compare
+        self.compare = lambda value: getattr(str(value), '__%s__' % compare)(self.expected_value)
 
 
 def properties(parent, children):
