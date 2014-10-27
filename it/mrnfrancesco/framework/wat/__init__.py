@@ -13,14 +13,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import os
 
-__all__ = ['project', 'author', 'dirs', 'files', 'package']
+__all__ = ['project', 'author', 'dirs', 'files', 'packages']
 
 from os.path import join, dirname
 
 
 class project(object):
+
+    __slots__ = {'name', 'version', 'description', 'links'}
+
     name = "WAT Framework"
     version = "0.0.1"
     description = None
@@ -33,6 +35,9 @@ class project(object):
 
 
 class author(object):
+
+    __slots__ = {'name', 'nickname', 'references'}
+
     name = "Francesco Marano"
     nickname = "mrnfrancesco"
     references = {
@@ -56,13 +61,31 @@ class dirs(object):
 
 class files(object):
 
-    __slots__ = {'database', 'useragents'}
+    __slots__ = {'useragents'}
 
-    database = join(dirs.modules, 'wat.db')
     useragents = join(dirs.data, 'user-agents.lst')
 
 
-class package(object):
+class docs(object):
+
+    __slots__ = {
+        'agreement', 'changelog', 'contribute', 'contributors',
+        'credits', 'disclaimer', 'faq', 'license', 'readme', 'thanks'
+    }
+
+    agreement = join(dirs.doc, 'AGREEMENT')
+    changelog = join(dirs.doc, 'CHANGELOG')
+    contribute = join(dirs.doc, 'CONTRIBUTE')
+    contributors = join(dirs.doc, 'CONTRIBUTORS')
+    credits = join(dirs.doc, 'CREDITS')
+    disclaimer = join(dirs.doc, 'DISCLAIMER')
+    faq = join(dirs.doc, 'FAQ')
+    license = join(dirs.doc, 'LICENSE')
+    readme = join(dirs.doc, 'README')
+    thanks = join(dirs.doc, 'THANKS')
+
+
+class packages(object):
 
     __slots__ = {'base', 'modules'}
 

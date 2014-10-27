@@ -56,7 +56,7 @@ def checkdependencies(dependencies):
                 else:
                     return None, False
             elif isinstance(dependency, Operation):
-                raise NotImplementedError  # TODO: implement also this
+                raise NotImplementedError  # TODO: implement also this stuff
             elif isinstance(dependency, Property):
                 continue
             else:
@@ -64,7 +64,7 @@ def checkdependencies(dependencies):
         else:
             try:
                 # Check if python package exists to resolve given dependency
-                module = importlib.import_module('.'.join([wat.package.modules, str(dependency)]))
+                module = importlib.import_module('.'.join([wat.packages.modules, str(dependency)]))
                 # Check if provided module is a WAT module or not,
                 # if it is, check for submodules entry (there must be at least one)
                 if not hasattr(module, '__modules__') or not module.__modules__:
@@ -100,7 +100,7 @@ class ORNode(object):
 
         self.nodes = list()
         try:
-            module = importlib.import_module("{}.{}".format(wat.package.modules, property_name))
+            module = importlib.import_module("{}.{}".format(wat.packages.modules, property_name))
         except ImportError:
             raise  # TODO: wrap ImportError and re-raise in a custom exception
         for submodule_name in submoduleof(module):

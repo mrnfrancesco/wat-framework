@@ -133,7 +133,7 @@ class WatModule(object):
 
         return self
 
-    def __exit__(self, exc_type, value, traceback):
+    def __exit__(self):
         self.curl.close()
 
     # Some useful functions to avoid module developer to know about some hack

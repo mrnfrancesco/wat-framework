@@ -20,7 +20,7 @@ __all__ = ['Author']
 class Author(object):
 
     def __init__(self, email, name=None, nickname=None, url=None):
-        self.email = email
+        self.email = str(email).strip().lower()
         if name is not None:
             self.name = name
         if nickname is not None:
@@ -28,3 +28,5 @@ class Author(object):
         if url is not None:
             self.url = url
 
+    def __eq__(self, other):
+        return self.email == other.email

@@ -36,7 +36,7 @@ class Property(object):
         :raise PropertyNameSyntaxError: if the property name is not compliance with choosen naming convention.
         """
         try:
-            __import__('.'.join([wat.package.modules, name]))
+            __import__('.'.join([wat.packages.modules, name]))
             self.name = name
         except ImportError:
             raise InvalidPropertyError(name)
