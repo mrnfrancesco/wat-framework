@@ -17,38 +17,36 @@
 import importlib
 
 from wat.lib.components import WatComponent, iswatcomponent
-from wat.lib.properties import Property, Constraint, Operation
+from wat.lib.properties import Property, Constraint
 from wat.lib.search import search
 import wat
 
 
-def checkdependencies(dependencies):
+def checkdependencies(preconditions):
     resolvable = list()
-    for dependency in dependencies:
+    for precondition in preconditions:
         # check if property value exists into registry
         # even if no module provide it (e.g. user-given)
-        if WatComponent.getdependency(str(dependency)) is not None:
-            if isinstance(dependency, Constraint):
-                if dependency.compare(WatComponent.getdependency(str(dependency))):
+        if WatComponent.precondition(str(precondition)) is not None:
+            if isinstance(precondition, Constraint):
+                if precondition.compare(WatComponent.precondition(str(precondition))):
                     continue
                 else:
                     return None, False
-            elif isinstance(dependency, Operation):
-                raise NotImplementedError  # TODO: implement this stuff too
-            elif isinstance(dependency, Property):
+            elif isinstance(precondition, Property):
                 continue
         else:
             try:
-                # Check if python package exists to resolve given dependency
-                module = importlib.import_module('.'.join([wat.packages.components, str(dependency)]))
+                # Check if python package exists to resolve given precondition
+                module = importlib.import_module('.'.join([wat.packages.components, str(precondition)]))
                 # Check if provided module is a WAT module or not,
                 # if it is, check for submodules entry (there must be at least one)
                 if not hasattr(module, '__modules__') or not module.__modules__:
                     return None, False
             except ImportError:
                 return None, False
-            resolvable.append(dependency)
-    # ok, all dependencies are resolved/resolvable
+            resolvable.append(precondition)
+    # ok, all preconditions are resolved/resolvable
     return resolvable, True
 
 

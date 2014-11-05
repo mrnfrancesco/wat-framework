@@ -41,12 +41,12 @@ def info(authors, released, updated, preconditions=None, version='unknown'):
             cls.updated = updated
         if not preconditions:  # if None or empty, save as None
             cls.preconditions = None
-        elif all(isinstance(spec, (Property, Constraint, Operation)) for spec in preconditions):
+        elif all(isinstance(spec, (Property, Constraint)) for spec in preconditions):
             cls.preconditions = preconditions
         else:
             raise AttributeError(
-                "dependency type must be one of '%s, %s, %s'" %
-                (Property.__name__, Constraint.__name__, Operation.__name__)
+                "dependency type must be one of '%s, %s'" %
+                (Property.__name__, Constraint.__name__)
             )
         # save the version as string, whatever type it really is
         cls.version = str(version)

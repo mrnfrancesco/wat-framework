@@ -52,9 +52,7 @@ class dirs(object):
 
     __slots__ = {'install', 'lib', 'components', 'data', 'doc'}
 
-    import it
-    install = dirname(dirname(it.__file__))
-    del it
+    install = dirname(dirname(__file__))
     base = dirname(__file__)
     lib = join(base, 'lib')
     components = join(base, 'components')
