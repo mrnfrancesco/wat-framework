@@ -125,6 +125,31 @@ class WatComponent(object):
         registry = Registry.instance()
         return registry[prop] if prop in registry else None
 
+    @staticmethod
+    def register(prop_value):
+        """Register the specified property with the given value if it is not already
+        present into the preconditions registry.
+
+        All the <property,value> pairs MUST be in the form of:
+         - dict, `WatComponent.register({'prop': value,})`
+         - list, `WatComponent.register([(prop, value),])`
+         - set, `WatComponent.register({(prop, value),})`
+
+        :param prop_value: all the <property,value> pairs to register
+        """
+        registry = Registry.instance()
+
+        def _register(key, val):
+            if key not in registry:
+                registry[key] = val
+
+        if isinstance(prop_value, dict):
+            for prop in prop_value:
+                _register(prop, prop_value[prop])
+        else:
+            for prop, value in prop_value:
+                _register(prop, value)
+
     save_as_attribute = lambda self, name: lambda value: self.__setattr__(name, value)
 
 
