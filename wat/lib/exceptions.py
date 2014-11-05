@@ -24,36 +24,34 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# TODO: redo all the exceptions (make it simpler) and add __all__ attribute
+
 from functools import reduce
 import operator
 
 
-class PropertyError(Exception):
-    """The property/constraint/operation encounter an error"""
+class PreconditionError(Exception):
+    """The property or constraint encounter an error"""
 
 
-class PropertyDoesNotExist(PropertyError):
-    """The requested property/constraint/operation does not exist"""
+class PreconditionDoesNotExist(PreconditionError):
+    """The requested property or constraint does not exist"""
 
 
-class ModuleError(Exception):
+class ComponentError(Exception):
     """The module encounter an error"""
 
 
-class ModuleDoesNotExist(ModuleError):
+class ComponentDoesNotExist(ComponentError):
     """The requested module does not exist"""
 
 
-class ModuleFailure(ModuleError):
+class ComponentFailure(ComponentError):
     """The module failed during execution"""
 
 
-class SuspiciousOperation(Exception):
-    """The user did something suspicious"""
-
-
-class PermissionDenied(Exception):
-    """The user did not have permission to do that"""
+class UnableToProceedError(ComponentFailure):
+    """The module is unable to provide the requested properties"""
 
 
 class NotSupportedError(NotImplementedError):
@@ -155,9 +153,9 @@ class ImproperlyConfigured(ValidationError):
         super(ImproperlyConfigured, self).__init__(message, params, code='misconfigured')
 
 
-class InvalidPropertyError(PropertyError, ValidationError):
+class InvalidPreconditionError(PreconditionError, ValidationError):
     def __init__(self, message, params=None):
-        super(InvalidPropertyError, self).__init__(message, params, code='invalid')
+        super(InvalidPreconditionError, self).__init__(message, params, code='invalid')
 
 
 class EmptyValueError(ValidationError):
@@ -167,3 +165,7 @@ class EmptyValueError(ValidationError):
             params={'param': param, 'given': given},
             code='empty'
         )
+
+
+class NotCompliantComponentError(ValidationError, ComponentError):
+    pass
