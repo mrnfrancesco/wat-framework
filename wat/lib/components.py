@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import wat
 
 __all__ = ['info', 'MetaComponent', 'WatComponent']
 
@@ -21,11 +22,10 @@ import pycurl
 import importlib
 from datetime import date
 
-from it.mrnfrancesco.framework import wat
-from it.mrnfrancesco.framework.wat.lib import clients
-from it.mrnfrancesco.framework.wat.lib.properties import *
-from it.mrnfrancesco.framework.wat.lib.models import Author
-from it.mrnfrancesco.framework.wat.lib.exceptions import ImproperlyConfigured
+from wat.lib import clients
+from wat.lib.properties import *
+from wat.lib.models import Author
+from wat.lib.exceptions import ImproperlyConfigured
 
 
 def info(authors, released, updated, preconditions=None, version='unknown'):

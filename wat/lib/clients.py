@@ -18,8 +18,8 @@ __all__ = ['Curl', 'CurlMulti', 'CurlShare']
 
 import pycurl
 
-from it.mrnfrancesco.framework.wat import conf
-from it.mrnfrancesco.framework.wat.lib.exceptions import ImproperlyConfigured
+from wat import conf
+from wat.lib.exceptions import ImproperlyConfigured
 
 
 def __initializedcurl(cls):

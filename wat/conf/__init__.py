@@ -13,12 +13,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import wat
 
 __all__ = ['clients']
 
 from pycurl import *
 
-from it.mrnfrancesco.framework import wat
 from singleton.singleton import Singleton
 
 

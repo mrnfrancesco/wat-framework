@@ -16,10 +16,10 @@
 
 import importlib
 
-from it.mrnfrancesco.framework import wat
-from it.mrnfrancesco.framework.wat.lib.components import WatComponent, iswatcomponent
-from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, Operation
-from it.mrnfrancesco.framework.wat.lib.search import search
+from wat.lib.components import WatComponent, iswatcomponent
+from wat.lib.properties import Property, Constraint, Operation
+from wat.lib.search import search
+import wat
 
 
 def checkdependencies(dependencies):

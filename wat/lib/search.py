@@ -18,8 +18,8 @@ import importlib
 import inspect
 from pkgutil import walk_packages, os
 
-from it.mrnfrancesco.framework import wat
-from it.mrnfrancesco.framework.wat.lib.components import iswatcomponent, module_from
+from wat.lib.components import iswatcomponent, module_from
+import wat
 
 
 def submoduleof(module):

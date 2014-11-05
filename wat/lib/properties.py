@@ -13,13 +13,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import wat
 
 __all__ = ['Registry', 'Property', 'Constraint']
 
 from singleton.singleton import Singleton
 
-from it.mrnfrancesco.framework import wat
-from it.mrnfrancesco.framework.wat.lib.exceptions import InvalidPreconditionError
+from wat.lib.exceptions import InvalidPreconditionError
 
 
 @Singleton

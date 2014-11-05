@@ -18,11 +18,11 @@ from datetime import date
 from pycurl import *
 import re
 
-from it.mrnfrancesco.framework.wat import conf
-from it.mrnfrancesco.framework.wat.lib.components import *
-from it.mrnfrancesco.framework.wat.lib.models import Author
-from it.mrnfrancesco.framework.wat.modules.website.cms.opencart.version import *
-from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, Registry
+from wat import conf
+from wat.lib.components import *
+from wat.lib.models import Author
+from wat.modules.website.cms.opencart.version import *
+from wat.lib.properties import Property, Constraint, Registry
 
 
 @info(
