@@ -23,6 +23,13 @@ from it.mrnfrancesco.framework.wat.lib.exceptions import ImproperlyConfigured
 
 
 def __initializedcurl(cls):
+    """
+    Instantiate and initialize the specified pyCurl class
+    with framework default options.
+    :param cls: the pyCurl client class to instantiate
+    :type cls: class
+    :return: an initialized instance of the specified pyCurl class
+    """
     curl = cls()
     for option in conf.clients.instance().__slots__:
         if hasattr(conf.clients, option) and hasattr(pycurl, option):
@@ -30,7 +37,7 @@ def __initializedcurl(cls):
                 curl.setopt(getattr(pycurl, option), getattr(conf.clients.instance(), option))
             except TypeError as e:
                 raise ImproperlyConfigured(
-                    message=e.message + " (option: %(option)s)",
+                    message=e.message + " (option: '%(option)s')",
                     params={'option': option}
                 )
     return curl

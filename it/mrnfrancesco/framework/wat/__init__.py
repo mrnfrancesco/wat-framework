@@ -50,13 +50,16 @@ class author(object):
 
 class dirs(object):
 
-    __slots__ = {'install', 'lib', 'modules', 'data', 'doc'}
+    __slots__ = {'install', 'lib', 'components', 'data', 'doc'}
 
-    install = dirname(__file__)
-    lib = join(install, 'lib')
-    modules = join(install, 'modules')
-    data = join(install, 'data')
-    doc = join(install, 'doc')
+    import it
+    install = dirname(dirname(it.__file__))
+    del it
+    base = dirname(__file__)
+    lib = join(base, 'lib')
+    components = join(base, 'components')
+    data = join(base, 'data')
+    doc = join(base, 'doc')
 
 
 class files(object):
@@ -87,8 +90,8 @@ class docs(object):
 
 class packages(object):
 
-    __slots__ = {'base', 'modules'}
+    __slots__ = {'base', 'components'}
 
     base = __name__  # it stands for "it.mrnfrancesco.framework.wat"
-    modules = '.'.join([base, 'modules'])
+    components = '.'.join([base, 'components'])
 

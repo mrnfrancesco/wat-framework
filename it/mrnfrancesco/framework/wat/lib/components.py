@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ['info', 'MetaModule', 'WatModule']
+__all__ = ['info', 'MetaComponent', 'WatComponent']
 
 import os
 import pycurl
@@ -25,10 +25,10 @@ from it.mrnfrancesco.framework import wat
 from it.mrnfrancesco.framework.wat.lib import clients
 from it.mrnfrancesco.framework.wat.lib.properties import *
 from it.mrnfrancesco.framework.wat.lib.models import Author
-from it.mrnfrancesco.framework.wat.lib.exceptions import NotSupportedError, ImproperlyConfigured
+from it.mrnfrancesco.framework.wat.lib.exceptions import ImproperlyConfigured
 
 
-def info(authors, released, updated, dependencies=None, version='unknown'):
+def info(authors, released, updated, preconditions=None, version='unknown'):
     def wrap(cls):
         # write all the info parameters into class definition looking for misconfiguration
         if all(isinstance(author, Author) for author in authors):
@@ -39,10 +39,10 @@ def info(authors, released, updated, dependencies=None, version='unknown'):
             cls.released = released
         if isinstance(updated, date):
             cls.updated = updated
-        if not dependencies:  # if None or empty, save as None
-            cls.dependencies = None
-        elif all(isinstance(spec, (Property, Constraint, Operation)) for spec in dependencies):
-            cls.dependencies = dependencies
+        if not preconditions:  # if None or empty, save as None
+            cls.preconditions = None
+        elif all(isinstance(spec, (Property, Constraint, Operation)) for spec in preconditions):
+            cls.preconditions = preconditions
         else:
             raise AttributeError(
                 "dependency type must be one of '%s, %s, %s'" %
@@ -52,66 +52,48 @@ def info(authors, released, updated, dependencies=None, version='unknown'):
         cls.version = str(version)
 
         return cls
+
     return wrap
 
 
-class MetaModule(type):
-
+class MetaComponent(type):
     def __init__(cls, name, bases, attr):
-        super(MetaModule, cls).__init__(name, bases, attr)
+        super(MetaComponent, cls).__init__(name, bases, attr)
         cls.name = name
         if cls.__doc__:
             cls.description = cls.__doc__
         else:
             raise AttributeError("missing description")
-        cls.__checkable__ = hasattr(cls, 'check')
 
         # A little hack to add provided property available to every module class
         module = importlib.import_module(cls.__module__)
         filename, _ = os.path.splitext(module.__file__)
-        filename = filename.replace(wat.dirs.modules, '')
+        filename = filename.replace(wat.dirs.components, '')
         filename = filename.rpartition(os.path.sep)[0]
-        cls.property_name = filename.replace(os.path.sep, '.')[1:]
-        del module
+        cls.postcondition = filename.replace(os.path.sep, '.')[1:]
 
-    def check(self):
-        """Check if the module is able to run properly.
-
-        :return: `True` if the module is able to run properly, `False` otherwise
-        :rtype: bool
-        :raise NotImplementedError: if check method was not implemented
-        :raise NotSupportedError: if :method:`self.check()` is not supported for this module
+    def run(self):
+        """Use the preconditions to provide the postcondition.
+        :return: the postocondition gained
+        :raise NotImplementedError: if run method was not implemented
         """
         raise NotImplementedError
 
-    def run(self):
-        raise NotImplementedError
 
-
-class WatModule(object):
-
+class WatComponent(object):
     def __init__(self):
         self.curl = clients.Curl()
         self.setopt = self.curl.setopt
 
     def __enter__(self):
-        if self.__checkable__:
-            try:
-                if self.check() is False:
-                    raise  # raise error to say 'this module cannot run'
-            except NotSupportedError:
-                # TODO: add some logging here
-                pass  # go ahead and try to run the module
-
         try:
             provided = self.run()
         except pycurl.error as error:
             raise error  # raise a proper wrapper error
 
         if hasattr(self, '__provides__'):  # if more values should be provided
-            # TODO: check this import (it should NOT works!)
-            provides = __import__(self.property_name, fromlist=['__provides__'])
-            if isinstance(provided, dict):  # provided properties must be a dict consistent with __provides__
+            provides = __import__('.'.join([wat.packages.components, self.postcondition])).__provides__
+            if isinstance(provided, dict):  # provided postconditions must be a dict consistent with __provides__
 
                 if set(provided.keys()).isdisjoint(provides):
                     raise ImproperlyConfigured("'__provides__' list and provided properties does not match")
@@ -119,28 +101,48 @@ class WatModule(object):
                 if len(provided) is not len(provides):
                     if len(provided) > len(provides):
                         raise ImproperlyConfigured(
-                            message="only properties in '__provides__' list must be returned, extra %(properties)s",
+                            message="only properties in '__provides__' list must be returned, extra '%(properties)s'",
                             params={'properties': list(set(provided.keys()).difference(provides))}
                         )
                     else:
                         raise ImproperlyConfigured(
-                            message="all properties in '__provides__' list must be returned, missing %(properties)s",
+                            message="all properties in '__provides__' list must be returned, missing '%(properties)s'",
                             params={'properties': list(set(provides).difference(provided.keys()))}
                         )
+            else:
+                raise  # TODO: raise exception to say "return type must be dict"
 
         # 'provided' seems good. Let's save them!
-        Registry.instance()[self.property_name] = provided
+        Registry.instance()[self.postcondition] = provided
 
         return self
 
     def __exit__(self):
         self.curl.close()
 
-    # Some useful functions to avoid module developer to know about some hack
     @staticmethod
-    def provide(prop, value):
-        if prop not in Registry.instance():
-            Registry.instance()[prop] = value
+    def precondition(prop):
+        registry = Registry.instance()
+        return registry[prop] if prop in registry else None
 
-    getdependency = staticmethod(lambda prop: Registry.instance()[prop] if prop in Registry.instance() else None)
     save_as_attribute = lambda self, name: lambda value: self.__setattr__(name, value)
+
+
+def iswatcomponent(cls):
+    """
+    :param cls: the class you want to know if it is a Wat component
+    :type cls: class
+    :rtype: bool
+    :return: `True` if the specified class is a Wat component, `False` otherwise
+    """
+    return WatComponent in cls.__bases__ and isinstance(cls, MetaComponent)
+
+
+def module_from(path):
+    """
+    Return the dotted notation name of a module from its path.
+     Note that the returned string is ready to be imported.
+    :param path: the absolute path of the module you want to convert
+    :return: the module package and name in dotted notation
+    """
+    return path.replace(wat.dirs.install, '').replace(os.path.sep, '.')[1:]

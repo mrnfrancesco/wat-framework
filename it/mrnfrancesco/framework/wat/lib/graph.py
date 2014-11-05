@@ -14,34 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import inspect
 import importlib
 
 from it.mrnfrancesco.framework import wat
-from it.mrnfrancesco.framework.wat.lib.modules import MetaModule, WatModule
+from it.mrnfrancesco.framework.wat.lib.components import WatComponent, iswatcomponent
 from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, Operation
-
-
-def iswatmodule(module_class):
-    """
-    :param module_class: the class of the module you want to know if it is a Wat module
-    :type module_class: class
-    :rtype: bool
-    :return: `True` if the specified module class is a Wat module, `False` otherwise
-    """
-    return WatModule in module_class.__bases__ and isinstance(module_class, MetaModule)
-
-
-def submoduleof(module):
-    for submodule_name in module.__modules__:
-        yield '.'.join([module.__name__, submodule_name])
-
-
-def watmodulein(module):
-    return filter(
-        lambda elem: elem.__module__ == module.__name__ and iswatmodule(elem),
-        [member[1] for member in inspect.getmembers(module, inspect.isclass)]
-    )
+from it.mrnfrancesco.framework.wat.lib.search import search
 
 
 def checkdependencies(dependencies):
@@ -49,22 +27,20 @@ def checkdependencies(dependencies):
     for dependency in dependencies:
         # check if property value exists into registry
         # even if no module provide it (e.g. user-given)
-        if WatModule.getdependency(str(dependency)) is not None:
+        if WatComponent.getdependency(str(dependency)) is not None:
             if isinstance(dependency, Constraint):
-                if dependency.compare(WatModule.getdependency(str(dependency))):
+                if dependency.compare(WatComponent.getdependency(str(dependency))):
                     continue
                 else:
                     return None, False
             elif isinstance(dependency, Operation):
-                raise NotImplementedError  # TODO: implement also this stuff
+                raise NotImplementedError  # TODO: implement this stuff too
             elif isinstance(dependency, Property):
                 continue
-            else:
-                raise ValueError  # TODO: raise a proper exception with custom message
         else:
             try:
                 # Check if python package exists to resolve given dependency
-                module = importlib.import_module('.'.join([wat.packages.modules, str(dependency)]))
+                module = importlib.import_module('.'.join([wat.packages.components, str(dependency)]))
                 # Check if provided module is a WAT module or not,
                 # if it is, check for submodules entry (there must be at least one)
                 if not hasattr(module, '__modules__') or not module.__modules__:
@@ -77,9 +53,8 @@ def checkdependencies(dependencies):
 
 
 class Node(object):
-
     def __init__(self, module_class):
-        if iswatmodule(module_class):
+        if iswatcomponent(module_class):
             self.module = module_class
         else:
             raise  # TODO: raise a proper exception to say "this is not a WAT Module"
@@ -88,28 +63,20 @@ class Node(object):
             dependencies, resolved_or_resolvable = checkdependencies(self.module.dependencies)
             if resolved_or_resolvable:
                 if dependencies:
-                    self.nodes = dict((prop, ORNode(prop)) for prop in self.module.dependencies)
+                    self.nodes = dict((prop, ORNode(prop)) for prop in dependencies)
             else:
                 raise  # TODO: raise a proper exception to say "there are some unresolvable dependencies"
 
 
 class ORNode(object):
-
     def __init__(self, property_name):
         self.property_name = property_name
 
-        self.nodes = list()
         try:
-            module = importlib.import_module("{}.{}".format(wat.packages.modules, property_name))
-        except ImportError:
-            raise  # TODO: wrap ImportError and re-raise in a custom exception
-        for submodule_name in submoduleof(module):
-            try:
-                submodule = importlib.import_module(submodule_name)
-                self.nodes.extend([Node(cls) for cls in watmodulein(submodule)])
-            except ImportError:
-                continue
-        if not self.nodes:
+            self.nodes = [Node(module_class=result) for result in search(prop=property_name)]
+        except:  # TODO: catch and handle the exception raised by search (?)
+            pass
+        if not hasattr(self, 'nodes'):
             raise  # TODO: raise a proper exception to say "there are unresolvable dependencies"
 
 
@@ -119,3 +86,33 @@ def findpaths(properties):
     return [ORNode(prop) for prop in properties]
 
 
+# WatComponent.provide('website.cms.name', 'opencart')
+# WatComponent.provide('website.cms.opencart.admin.directory', 'admin')
+# n = ORNode('website.cms.opencart.version')
+# print n
+
+# from digraphtools import *
+#
+# dag = graph_from_edges([(1, 2), (2, 3), (3, 4), (2, 4), (4, 5), (5, 3)])
+# print dag
+# for node in dfs_topsort_traversal(dag, 1):
+#     print node
+
+requested_props = ["website.cms.opencart.version"]
+to_process_props = requested_props
+involved_props = dict()
+
+for processing_property in to_process_props:
+    watmodules = search(prop=processing_property)
+    for watmodule in watmodules:
+        if watmodule.dependencies:
+            to_process_props.extend([str(dependency) for dependency in watmodule.dependencies])
+    involved_props[processing_property] = watmodules
+
+print "Involved Properties: "
+print involved_props
+
+if set(requested_props).issubset(set([key for key, value in involved_props.items() if value])):
+    print 'ok'
+else:
+    print 'ko'

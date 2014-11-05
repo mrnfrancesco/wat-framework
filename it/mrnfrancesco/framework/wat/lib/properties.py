@@ -14,17 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ['Registry', 'Property', 'Constraint', 'Operation']
+__all__ = ['Registry', 'Property', 'Constraint']
 
 from singleton.singleton import Singleton
 
 from it.mrnfrancesco.framework import wat
-from it.mrnfrancesco.framework.wat.lib.exceptions import InvalidPropertyError, EmptyValueError
+from it.mrnfrancesco.framework.wat.lib.exceptions import InvalidPreconditionError
 
 
 @Singleton
 class Registry(dict):
-    pass
+    """A singleton dictionary to store components provided properties and to solve components preconditions."""
 
 
 class Property(object):
@@ -36,23 +36,13 @@ class Property(object):
         :raise PropertyNameSyntaxError: if the property name is not compliance with choosen naming convention.
         """
         try:
-            __import__('.'.join([wat.packages.modules, name]))
+            __import__('.'.join([wat.packages.components, name]))
             self.name = name
         except ImportError:
-            raise InvalidPropertyError(name)
+            raise InvalidPreconditionError(name)
 
     def __str__(self):
         return self.name
-
-
-class Operation(Property):
-
-    def __init__(self, name, params):
-        super(Operation, self).__init__(name)
-        if params:
-            self.params = params
-        else:
-            raise EmptyValueError("params", params)
 
 
 class Constraint(Property):

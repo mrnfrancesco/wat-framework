@@ -19,7 +19,7 @@ from pycurl import *
 import re
 
 from it.mrnfrancesco.framework.wat import conf
-from it.mrnfrancesco.framework.wat.lib.modules import *
+from it.mrnfrancesco.framework.wat.lib.components import *
 from it.mrnfrancesco.framework.wat.lib.models import Author
 from it.mrnfrancesco.framework.wat.modules.website.cms.opencart.version import *
 from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, Registry
@@ -32,14 +32,14 @@ from it.mrnfrancesco.framework.wat.lib.properties import Property, Constraint, R
     released=date(2014, 10, 18),
     updated=date(2014, 10, 21),
     version='0.0.1',
-    dependencies=[
+    preconditions=[
         Constraint("website.cms.name", "opencart", 'eq'),
         Property("website.cms.opencart.admin.directory"),
     ]
 )
-class GetVersionByFooter(WatModule):
+class GetVersionByFooter(WatComponent):
     """This module provide the OpenCart exact version by looking at the admin page footer unless it was disabled."""
-    __metaclass__ = MetaModule
+    __metaclass__ = MetaComponent
 
     __NEW_FOOTER_REGEX = r'<footer id="footer">'
     __OLD_FOOTER_REGEX = r'<div id="footer">' \
@@ -96,6 +96,6 @@ class GetVersionByFooter(WatModule):
                 elif self.__pick_version() is not None:
                     return self.ver
                 else:
-                    raise  # TODO: raise a sort of ModuleFailure error
+                    raise  # TODO: raise a sort of ComponentFailure error
             else:
                 raise  # TODO: raise the proper error to say something like 'it is not module fault, it's website one'
