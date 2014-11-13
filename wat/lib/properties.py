@@ -19,7 +19,7 @@ __all__ = ['Registry', 'Property', 'Constraint']
 
 from singleton.singleton import Singleton
 
-from wat.lib.exceptions import InvalidPreconditionError
+from wat.lib.exceptions import PropertyDoesNotExist
 
 
 @Singleton
@@ -33,13 +33,13 @@ class Property(object):
         """Create an instance of the property with the specified name to use in module specification.
 
         :param name: the name of the property to represent.
-        :raise PropertyNameSyntaxError: if the property name is not compliance with choosen naming convention.
+        :raise InvalidPropertyError: if the property does not exists
         """
         try:
             __import__('.'.join([wat.packages.components, name]))
             self.name = name
         except ImportError:
-            raise InvalidPreconditionError(name)
+            raise PropertyDoesNotExist(name)
 
     def __str__(self):
         return self.name

@@ -30,11 +30,11 @@ from functools import reduce
 import operator
 
 
-class PreconditionError(Exception):
+class PropertyError(Exception):
     """The property or constraint encounter an error"""
 
 
-class PreconditionDoesNotExist(PreconditionError):
+class PropertyDoesNotExist(PropertyError):
     """The requested property or constraint does not exist"""
 
 
@@ -153,9 +153,9 @@ class ImproperlyConfigured(ValidationError):
         super(ImproperlyConfigured, self).__init__(message, params, code='misconfigured')
 
 
-class InvalidPreconditionError(PreconditionError, ValidationError):
+class InvalidPropertyError(PropertyError, ValidationError):
     def __init__(self, message, params=None):
-        super(InvalidPreconditionError, self).__init__(message, params, code='invalid')
+        super(InvalidPropertyError, self).__init__(message, params, code='invalid')
 
 
 class EmptyValueError(ValidationError):
