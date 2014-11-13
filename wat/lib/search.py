@@ -50,18 +50,25 @@ def search(prop=None, preconditions=None):
             raise  # TODO: wrap it with a proper exception to say "no property named like this"
 
     if preconditions is not None:
-        # if we have no components, get them by preconditions otherwise filter them only
+        # if we have no components, get them all and then filter by preconditions
+        # otherwise filter them only
         if not components:
-            paths = [wat.dirs.components]
-            for path in paths:
-                for _, package_or_path, ispackage in walk_packages(path=[path], prefix=path + os.path.sep):
-                    if ispackage:
-                        paths.append(package_or_path)
-                    else:
-                        components.extend(componentsin(importlib.import_module(module_from(package_or_path))))
+            components = all_components()
 
         components = filter(
             lambda component_class: not set(str(dep) for dep in component_class.dependencies).isdisjoint(preconditions),
             components
         )
+    return components
+
+
+def all_components():
+    components = list()
+    paths = [wat.dirs.components]
+    for path in paths:
+        for _, package_or_path, ispackage in walk_packages(path=[path], prefix=path + os.path.sep):
+            if ispackage:
+                paths.append(package_or_path)
+            else:
+                components.extend(componentsin(importlib.import_module(module_from(package_or_path))))
     return components
