@@ -25,7 +25,7 @@ from datetime import date
 from wat.lib import clients
 from wat.lib.properties import *
 from wat.lib.models import Author
-from wat.lib.exceptions import ImproperlyConfigured
+from wat.lib.exceptions import ImproperlyConfigured, InvalidTypeError
 
 
 def info(authors, released, updated, preconditions=None, version='unknown'):
@@ -34,20 +34,17 @@ def info(authors, released, updated, preconditions=None, version='unknown'):
         if all(isinstance(author, Author) for author in authors):
             cls.authors = authors
         else:
-            raise AttributeError("all authors must be of type '%s'" % Author.__name__)
+            raise InvalidTypeError('authors', Author)
         if isinstance(released, date):
             cls.released = released
         if isinstance(updated, date):
             cls.updated = updated
-        if not preconditions:  # if None or empty, save as None
-            cls.preconditions = None
+        if not preconditions:  # if None or empty, save as empty
+            cls.preconditions = set()
         elif all(isinstance(spec, (Property, Constraint)) for spec in preconditions):
-            cls.preconditions = preconditions
+            cls.preconditions = set(preconditions)
         else:
-            raise AttributeError(
-                "dependency type must be one of '%s, %s'" %
-                (Property.__name__, Constraint.__name__)
-            )
+            raise InvalidTypeError('preconditions', Property)
         # save the version as string, whatever type it really is
         cls.version = str(version)
 
