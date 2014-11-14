@@ -31,7 +31,6 @@ class Property(object):
 
     def __init__(self, name):
         """Create an instance of the property with the specified name to use in module specification.
-
         :param name: the name of the property to represent.
         :raise InvalidPropertyError: if the property does not exists
         """
@@ -40,6 +39,18 @@ class Property(object):
             self.name = name
         except ImportError:
             raise PropertyDoesNotExist(name)
+
+    def __eq__(self, other):
+        return isinstance(other, Property) and self.name == other.name
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __repr__(self):
+        return "Property('%s')" % self.name
+
+    def __hash__(self):
+        return hash(self.name)
 
     def __str__(self):
         return self.name
