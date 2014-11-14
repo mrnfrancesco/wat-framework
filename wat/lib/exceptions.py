@@ -149,6 +149,7 @@ class ValidationError(Exception):
 
 class ImproperlyConfigured(ValidationError):
     """WAT Framework is somehow improperly configured"""
+
     def __init__(self, message, params=None):
         super(ImproperlyConfigured, self).__init__(message, params, code='misconfigured')
 
@@ -164,6 +165,20 @@ class EmptyValueError(ValidationError):
             message="'%(param)s' cannot be None or empty ('%(given)s' given)",
             params={'param': param, 'given': given},
             code='empty'
+        )
+
+
+class InvalidTypeError(ValidationError, TypeError):
+    def __init__(self, param, expected):
+        if isinstance(expected, (list, tuple, set)):
+            expected = ' or '.join([repr(expected_type) for expected_type in expected])
+        else:
+            expected = repr(expected)
+        param = param if isinstance(param, str) else repr(param)
+        super(InvalidTypeError, self).__init__(
+            message="%(param)s is not an instance or a subclass of %(expected)s",
+            params={'param': param, 'expected': expected},
+            code='invalid'
         )
 
 
