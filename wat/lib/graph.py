@@ -16,7 +16,7 @@
 
 from wat.lib import components, search
 from wat.lib.components import WatComponent
-from wat.lib.exceptions import PropertyDoesNotExist
+from wat.lib.exceptions import PropertyDoesNotExist, InvalidTypeError
 from wat.lib.properties import Property
 
 
@@ -57,46 +57,60 @@ class RelaxedGraphPlan(object):
                 """Initialize the No-Operation action with the specified property.
                 :param prop: the property to bring forward through the NoOp node
                 :type prop: Property
+                :raise InvalidTypeError: if the specified property is not of type Property or subclasses
                 """
-                self.preconditions = self.postconditions = [prop]
+                if isinstance(prop, Property):
+                    self.preconditions = self.postconditions = {prop}
+                else:
+                    raise InvalidTypeError(prop, expected=Property)
 
         def __init__(self, actions=None):
             """Initialize an Action Layer from the specified actions which should be all wat components.
             :param actions: the actions to add in the action layer
-            :type actions: set|list|tuple
+            :type actions: set|list|tuple|None
+            :raise InvalidTypeError: if actions parameter is not one of the allowed types
             :raise: if at least one action is not a wat component
             """
-            if not isinstance(actions, set):
-                actions = set(actions)
-            # TODO: use add method below
-            if all(components.iswatcomponent(action) for action in actions):
-                self.actions = set(actions)
+            if isinstance(actions, (list, set, tuple)):
+                if not isinstance(actions, set):
+                    actions = set(actions)
+                self.actions = set()
+                for action in actions:
+                    self.add(action)
+            elif actions is None:
+                self.actions = set()
             else:
-                raise  # TODO: raise an "invalid action error"
+                raise InvalidTypeError(actions, (list, set, tuple, type(None)))
 
         def __len__(self):
             """Return the number of actions in the action layer"""
             return len(self.actions)
 
         def add(self, action):
-            raise NotImplementedError  # TODO
+            if components.iswatcomponent(action):
+                self.actions.add(action)
+            else:
+                raise  # TODO: raise an "invalid action error"
 
         def remove(self, action):
-            raise NotImplementedError  # TODO
+            self.actions.discard(action)
 
         @property
         def preconditions(self):
             """Return all the preconditions needed for the actions in the action layer.
             :rtype: set
             """
-            return set(action.preconditions for action in self.actions)
+            preconditions = set()
+            for action in self.actions:
+                preconditions = preconditions.union(action.preconditions)
+            return preconditions
 
         @property
         def postconditions(self):
             """Return all the postconditions gained by the actions in the action layer.
             :rtype: set
             """
-            return set(action.postcondition for action in self.actions)
+            return set(Property(action.postcondition) for action in self.actions)
 
         @property
         def property_layer(self):
@@ -128,7 +142,7 @@ class RelaxedGraphPlan(object):
                 differences = set()
                 for prop, value in initial_state:
                     if isinstance(prop, Property):
-                        WatComponent.register({prop: value})
+                        WatComponent.register({str(prop): value})
                         filtered_initial_state.add(prop)
                     else:
                         differences.add(prop)
