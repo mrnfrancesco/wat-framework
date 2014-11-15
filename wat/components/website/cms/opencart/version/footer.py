@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import date
-from pycurl import *
+from pycurl import URL, WRITEFUNCTION, HTTP_CODE
 import re
 
 from wat import conf
