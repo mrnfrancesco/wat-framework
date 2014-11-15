@@ -74,17 +74,13 @@ class MetaComponent(type):
 
     def run(self):
         """Use the preconditions to provide the postcondition.
-        :return: the postocondition gained
+        :return: the postcondition gained
         :raise NotImplementedError: if run method was not implemented
         """
         raise NotImplementedError
 
 
 class WatComponent(object):
-    def __init__(self):
-        self.curl = clients.Curl()
-        self.setopt = self.curl.setopt
-
     def __enter__(self):
         try:
             provided = self.run()
@@ -116,9 +112,6 @@ class WatComponent(object):
         Registry.instance()[self.postcondition] = provided
 
         return self
-
-    def __exit__(self):
-        self.curl.close()
 
     @staticmethod
     def precondition(prop):
