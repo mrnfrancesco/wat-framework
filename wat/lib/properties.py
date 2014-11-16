@@ -19,7 +19,7 @@ __all__ = ['Registry', 'Property', 'Constraint']
 
 from singleton.singleton import Singleton
 
-from wat.lib.exceptions import PropertyDoesNotExist
+from wat.lib.exceptions import PropertyDoesNotExist, InvalidTypeError
 
 
 @Singleton
@@ -28,17 +28,30 @@ class Registry(dict):
 
 
 class Property(object):
-
     def __init__(self, name):
         """Create an instance of the property with the specified name to use in module specification.
         :param name: the name of the property to represent.
-        :raise InvalidPropertyError: if the property does not exists
+        :type name: str
+        :raise InvalidTypeError: if the parameter is not a string
+        """
+        if isinstance(name, str):
+            self.name = name
+        else:
+            raise InvalidTypeError(name, (str,))
+
+    def exists(self):
+        """Check if the property exists or not.
+        :return: True if the property exists, False otherwise
+        :rtype: bool
         """
         try:
-            __import__('.'.join([wat.packages.components, name]))
-            self.name = name
+            __import__('.'.join([wat.packages.components, self.name]))
         except ImportError:
-            raise PropertyDoesNotExist(name)
+            return False
+        return True
+
+    def __repr__(self):
+        return "Property('%s')" % self.name
 
     def __eq__(self, other):
         return isinstance(other, Property) and self.name == other.name
@@ -57,7 +70,6 @@ class Property(object):
 
 
 class Constraint(Property):
-
     def __init__(self, name, expected, compare='eq'):
         super(Constraint, self).__init__(name)
         if expected is not None:

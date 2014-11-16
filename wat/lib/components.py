@@ -67,7 +67,7 @@ class MetaComponent(type):
         filename, _ = os.path.splitext(module.__file__)
         filename = filename.replace(wat.dirs.components, '')
         filename = filename.rpartition(os.path.sep)[0]
-        cls.postcondition = filename.replace(os.path.sep, '.')[1:]
+        cls.postcondition = Property(filename.replace(os.path.sep, '.')[1:])
 
     def run(self):
         """Use the preconditions to provide the postcondition.
@@ -85,7 +85,7 @@ class WatComponent(object):
             raise error  # raise a proper wrapper error
 
         if hasattr(self, '__provides__'):  # if more values should be provided
-            provides = __import__('.'.join([wat.packages.components, self.postcondition])).__provides__
+            provides = __import__('.'.join([wat.packages.components, str(self.postcondition)])).__provides__
             if isinstance(provided, dict):  # provided postconditions must be a dict consistent with __provides__
 
                 if set(provided.keys()).isdisjoint(provides):
@@ -106,7 +106,7 @@ class WatComponent(object):
                 raise  # TODO: raise exception to say "return type must be dict"
 
         # 'provided' seems good. Let's save them!
-        Registry.instance()[self.postcondition] = provided
+        Registry.instance()[str(self.postcondition)] = provided
 
         return self
 
