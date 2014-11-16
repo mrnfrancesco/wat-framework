@@ -37,6 +37,7 @@ from wat.lib.properties import Constraint
     ]
 )
 class GetAdminDirByDefault(WatComponent):
+    """This module provide the OpenCart default admin directory or fail if it was changed."""
     __metaclass__ = MetaComponent
 
     def __init__(self):
