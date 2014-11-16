@@ -30,9 +30,9 @@ class NoOpActionTestCase(unittest.TestCase):
         )
 
     def test_postcondition(self):
-        self.assertSetEqual(
-            {self.property_obj},
-            RelaxedGraphPlan.ActionLayer.NoOpAction(self.property_obj).postconditions
+        self.assertEqual(
+            self.property_obj,
+            RelaxedGraphPlan.ActionLayer.NoOpAction(self.property_obj).postcondition
         )
 
 
@@ -51,7 +51,7 @@ class ActionLayerTestCase(unittest.TestCase):
             actions='an invalid type'
         )
         # list, set and tuple and None types are ok
-        RelaxedGraphPlan.ActionLayer(actions=None)
+        RelaxedGraphPlan.ActionLayer()
         RelaxedGraphPlan.ActionLayer(actions=[self.action])
         RelaxedGraphPlan.ActionLayer(actions={self.action})
         RelaxedGraphPlan.ActionLayer(actions=(self.action,))
@@ -60,7 +60,7 @@ class ActionLayerTestCase(unittest.TestCase):
         self.assertEqual(1, len(RelaxedGraphPlan.ActionLayer(actions={self.action})))
 
     def test_add(self):
-        layer = RelaxedGraphPlan.ActionLayer(actions=None)
+        layer = RelaxedGraphPlan.ActionLayer()
         self.assertSetEqual(set(), layer.actions)
         # adding a valid wat component as action
         layer.add(self.action)
@@ -86,7 +86,7 @@ class ActionLayerTestCase(unittest.TestCase):
 
     def test_preconditions(self):
         # no actions means no preconditions
-        self.assertSetEqual(set(), RelaxedGraphPlan.ActionLayer(actions=None).preconditions)
+        self.assertSetEqual(set(), RelaxedGraphPlan.ActionLayer().preconditions)
         # one action means its preconditions
         self.assertSetEqual(
             self.action.preconditions,
@@ -95,7 +95,7 @@ class ActionLayerTestCase(unittest.TestCase):
 
     def test_postconditions(self):
         # no actions means no postconditions
-        self.assertSetEqual(set(), RelaxedGraphPlan.ActionLayer(actions=None).postconditions)
+        self.assertSetEqual(set(), RelaxedGraphPlan.ActionLayer().postconditions)
         # one action means its postcondition
         self.assertSetEqual(
             {Property(self.action.postcondition)},
@@ -104,7 +104,7 @@ class ActionLayerTestCase(unittest.TestCase):
 
     def test_property_layer(self):
         # no actions means no property layer
-        self.assertSetEqual(set(), RelaxedGraphPlan.ActionLayer(actions=None).property_layer)
+        self.assertSetEqual(set(), RelaxedGraphPlan.ActionLayer().property_layer)
         # one action means its preconditions and its postcondition
         self.assertSetEqual(
             self.action.preconditions.union({Property(self.action.postcondition)}),
