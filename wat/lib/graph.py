@@ -16,7 +16,7 @@
 
 from wat.lib import components, search
 from wat.lib.components import WatComponent
-from wat.lib.exceptions import PropertyDoesNotExist, InvalidTypeError
+from wat.lib.exceptions import InvalidTypeError
 from wat.lib.properties import Property
 
 
@@ -60,14 +60,15 @@ class RelaxedGraphPlan(object):
                 :raise InvalidTypeError: if the specified property is not of type Property or subclasses
                 """
                 if isinstance(prop, Property):
-                    self.preconditions = self.postconditions = {prop}
+                    self.preconditions = {prop}
+                    self.postcondition = prop
                 else:
                     raise InvalidTypeError(prop, expected=Property)
 
         def __init__(self, actions=None):
             """Initialize an Action Layer from the specified actions which should be all wat components.
             :param actions: the actions to add in the action layer
-            :type actions: set|list|tuple|None
+            :type actions: set|list|tuple
             :raise InvalidTypeError: if actions parameter is not one of the allowed types
             :raise: if at least one action is not a wat component
             """
@@ -80,14 +81,14 @@ class RelaxedGraphPlan(object):
             elif actions is None:
                 self.actions = set()
             else:
-                raise InvalidTypeError(actions, (list, set, tuple, type(None)))
+                raise InvalidTypeError(actions, (list, set, tuple))
 
         def __len__(self):
             """Return the number of actions in the action layer"""
             return len(self.actions)
 
         def add(self, action):
-            if components.iswatcomponent(action):
+            if isinstance(action, RelaxedGraphPlan.ActionLayer.NoOpAction) or components.iswatcomponent(action):
                 self.actions.add(action)
             else:
                 raise  # TODO: raise an "invalid action error"
@@ -110,7 +111,7 @@ class RelaxedGraphPlan(object):
             """Return all the postconditions gained by the actions in the action layer.
             :rtype: set
             """
-            return set(Property(action.postcondition) for action in self.actions)
+            return set(action.postcondition for action in self.actions)
 
         @property
         def property_layer(self):
@@ -141,117 +142,88 @@ class RelaxedGraphPlan(object):
             if all(isinstance(prop_value, tuple) and len(prop_value) == 2 for prop_value in initial_state):
                 differences = set()
                 for prop, value in initial_state:
-                    if isinstance(prop, Property):
-                        WatComponent.register({str(prop): value})
-                        filtered_initial_state.add(prop)
+                    if isinstance(prop, str):
+                        WatComponent.register({prop: value})
+                        filtered_initial_state.add(Property(prop))
                     else:
-                        differences.add(prop)
+                        differences.add(Property(prop))
                 if fail_on_invalid and differences:
                     raise  # TODO: raise an error with differences in it
                 elif differences:
-                    pass  # TODO: log the differences from the two enambles
-                self.__initial_state = filtered_initial_state
+                    pass  # TODO: log the differences from the two ensambles
+                self.initial_state = filtered_initial_state
             else:
                 raise  # TODO: raise "only pair tuple accepted"
         elif initial_state is None:
-            self.__initial_state = None  # it's ok to have no user-provided properties
+            self.initial_state = set()  # it's ok to have no user-provided properties
         else:
-            raise  # TODO: raise "invalid type"
+            raise InvalidTypeError(param=initial_state, expected=(list, set, tuple))
 
         # Check and register goal state
         if isinstance(goal_state, (list, set, tuple)):
             filtered_goal_state = set()
             goal_state_errors = set()
-            for prop in goal_state:
-                try:
-                    filtered_goal_state.add(Property(prop))
-                except PropertyDoesNotExist:
+            for prop_name in goal_state:
+                prop = Property(str(prop_name))
+                if not prop.exists():
                     goal_state_errors.add(prop)
-            if fail_on_invalid and goal_state_errors:
-                raise  # TODO: raise all collected goal state errors
-            elif goal_state_errors:
-                pass  # TODO: log all collected goal state errors
-            self.__goal_state = filtered_goal_state
+                else:
+                    filtered_goal_state.add(prop)
+                if fail_on_invalid and goal_state_errors:
+                    raise  # TODO: raise all collected goal state errors
+                elif goal_state_errors:
+                    pass  # TODO: log all collected goal state errors
+                self.goal_state = filtered_goal_state
         elif goal_state is None:
             # It means that you want to see what properties you can
             # achieve with the given properties as initial state
-            self.__goal_state = None
+            self.goal_state = None
 
         self.__uncollected_actions = set(search.all_components())
         self.__collected_actions = set()  # it collects all the already seen components to avoid loops
 
-        self.__action_layers = list()
+        self.action_layers = list()
 
         # make the first step to build the first action layer
         initial_action_layer = RelaxedGraphPlan.ActionLayer()
-        for action in self.__uncollected_actions:
+        for action in self.__uncollected_actions.copy():
             action_preconditions = set(action.preconditions)
-            if action_preconditions.issubset(self.__initial_state) or not action_preconditions:
+            if not action_preconditions or action_preconditions.issubset(self.initial_state):
                 self.__uncollected_actions.remove(action)
                 self.__collected_actions.add(action)
                 initial_action_layer.add(action)
-        self.__action_layers.append(initial_action_layer)
+        self.action_layers.append(initial_action_layer)
 
+    def __expand(self):
+        """Make a step forward in the process of building the planning graph, making true that:
+            * a in Ax => a not in Ay, for any y > x
+        """
+        last_action_layer = self.action_layers[-1]
+        next_action_layer = self.ActionLayer(
+            {RelaxedGraphPlan.ActionLayer.NoOpAction(prop) for prop in last_action_layer.property_layer}
+        )
+        for action in self.__uncollected_actions.copy():
+            if action.preconditions.issubset(last_action_layer.property_layer):
+                self.__uncollected_actions.remove(action)
+                self.__collected_actions.add(action)
+                next_action_layer.add(action)
+        self.action_layers.append(next_action_layer)
 
-def __expand(self):
-    """Make a step forward in the process of building the planning graph, making true that:
-        * a in Ax => a not in Ay, for any y > x
-    """
-    last_action_layer = self.__action_layers[-1]
-    next_action_layer = self.ActionLayer(
-        {RelaxedGraphPlan.ActionLayer.NoOpAction(prop) for prop in last_action_layer.preconditions}
-    )
-    for action in self.__uncollected_actions:
-        if action.preconditions.issubset(last_action_layer.property_layer):
-            self.__uncollected_actions.remove(action)
-            self.__collected_actions.add(action)
-            next_action_layer.add(action)
+    def __goal_reached(self):
+        """Check if the specified goal state was reached or not.
+        :return: None if no goal state was specified, True if the last action layer contains the goal state, False otherwise
+        :rtype: bool|None
+        """
+        return self.goal_state.issubset(self.action_layers[-1].property_layer) if self.goal_state else None
 
-
-def __goal_reached(self):
-    """Check if the specified goal state was reached or not.
-    :return: None if no goal state was specified, True if the last action layer contains the goal state, False otherwise
-    :rtype: bool|None
-    """
-    return self.__goal_state.issubset(self.__action_layers[-1].property_layer) if self.__goal_state else False
-
-
-def __solution_possible(self):
-    """Check if is it possible to reach the goal state.
-    :return: True if goal is already reached or if the graph is expandable, False if fixed point was reached.
-    :rtype: bool
-    """
-    if self.__goal_reached():
-        return True
-    else:
-        # if no goal state was specified or goal is not reached yet, check for possibility to expand the graph
-        last_action_layer = self.__action_layers[-1]
-        return last_action_layer.preconditions != last_action_layer.property_layer
-
-
-# def checkpreconditions(preconditions):
-# resolvable = list()
-# for precondition in preconditions:
-#         # check if property value exists into registry
-#         # even if no module provide it (e.g. user-given)
-#         if WatComponent.precondition(str(precondition)) is not None:
-#             if isinstance(precondition, Constraint):
-#                 if precondition.compare(WatComponent.precondition(str(precondition))):
-#                     continue
-#                 else:
-#                     return None, False
-#             elif isinstance(precondition, Property):
-#                 continue
-#         else:
-#             try:
-#                 # Check if python package exists to resolve given precondition
-#                 module = importlib.import_module('.'.join([wat.packages.components, str(precondition)]))
-#                 # Check if provided module is a WAT module or not,
-#                 # if it is, check for submodules entry (there must be at least one)
-#                 if not hasattr(module, '__modules__') or not module.__modules__:
-#                     return None, False
-#             except ImportError:
-#                 return None, False
-#             resolvable.append(precondition)
-#     # ok, all preconditions are resolved/resolvable
-#     return resolvable, True
+    def __solution_possible(self):
+        """Check if is it possible to reach the goal state.
+        :return: True if goal is already reached or if the graph is expandable, False if fixed point was reached without solution.
+        :rtype: bool
+        """
+        if self.__goal_reached():
+            return True
+        else:
+            # if no goal state was specified or goal is not reached yet, check for possibility to expand the graph
+            last_action_layer = self.action_layers[-1]
+            return last_action_layer.preconditions != last_action_layer.property_layer
