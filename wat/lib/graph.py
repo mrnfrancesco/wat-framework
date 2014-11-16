@@ -227,3 +227,57 @@ class RelaxedGraphPlan(object):
             # if no goal state was specified or goal is not reached yet, check for possibility to expand the graph
             last_action_layer = self.action_layers[-1]
             return last_action_layer.preconditions != last_action_layer.property_layer
+
+    @property
+    def solution(self):
+        class LayeredPlan(object):
+
+            def __init__(self, planning_graph):
+                self.action_layers = list()
+                # copy backwards the graph structure
+                for action_layer in planning_graph.action_layers[::-1]:
+                    if self.action_layers:  # mantain the actions which need for these properties
+                        precondition_needed = self.action_layers[-1].preconditions
+                    elif planning_graph.goal_state:  # if first step take them from specified goal state if any
+                        precondition_needed = planning_graph.goal_state
+                    else:
+                        # if no goal was specified mantain all actions as side-effect of
+                        # choosing as needed all the precondition in the last action layer
+                        precondition_needed = planning_graph.action_layers[-1].preconditions
+                    # clean up all the unused actions (those with useless postcondition)
+                    for action in action_layer.actions.copy():
+                        if action.postcondition not in precondition_needed:
+                            action_layer.remove(action)
+                    # copy the remaining action layer at the beginning of the layered plan
+                    self.action_layers.insert(0, action_layer)
+
+            def run(self, choose_method=None):
+                raise NotImplementedError  # TODO
+
+        # Termination is granted by fixed-point level.
+        # A fixed-point level in a planning graph G is a level k such that for all i > k
+        # level i of G is identical to level k.
+        while True:
+            goal_reached = self.__goal_reached()
+            if goal_reached:
+                return LayeredPlan(self)
+            else:
+                if self.__solution_possible():
+                    self.__expand()  # go ahead with the next step
+                else:
+                    # the graph is no more expandable, but no goal state
+                    # was specified, so the solution is all the graph
+                    # when fixed-point layer is reached
+                    if goal_reached is None:
+                        return LayeredPlan(self)  # return all as solution
+                    else:  # fixed-point level was reached, but goal state was not
+                        return None  # No solution found
+
+
+# print RelaxedGraphPlan(
+#     initial_state=[
+#         ('website.cms.name', 'opencart')
+#     ],
+#     goal_state=['website.cms.opencart.version'],
+#     fail_on_invalid=True
+# ).solution
