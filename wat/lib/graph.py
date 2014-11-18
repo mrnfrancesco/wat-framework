@@ -317,10 +317,24 @@ class RelaxedGraphPlan(object):
                         return None  # No solution found
 
 
-# print RelaxedGraphPlan(
-#     initial_state=[
-#         ('website.cms.name', 'opencart')
-#     ],
-#     goal_state=['website.cms.opencart.version'],
+# # set a target
+# clients.instance().URL = 'http://demo.opencart.com/'
+# # build the planning graph problem
+# rgp = RelaxedGraphPlan(
+#     initial_state=[('website.cms.name', 'opencart')],
 #     fail_on_invalid=True
-# ).solution
+# )
+# # find and execute a solution
+# rgp.solution.execute()
+#
+# # if goal was specified show only goal state properties
+# if rgp.goal_state is not None:
+#     print "Goal state:"
+#     results = dict((prop, value) for prop, value in Registry.instance().iteritems() if Property(prop) in rgp.goal_state)
+# # if no goal was specified show all retrieved properties
+# else:
+#     print "All retrieved properties:"
+#     results = Registry.instance()
+# # print the results
+# for prop, value in results.iteritems():
+#     print "%s\t=>\t%s" % (prop, str(value))
