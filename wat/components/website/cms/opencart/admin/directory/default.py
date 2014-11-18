@@ -45,6 +45,7 @@ class GetAdminDirByDefault(WatComponent):
         from urlparse import urljoin
 
         self.curl = clients.Curl()
+        self.curl.setopt(WRITEFUNCTION, self.save_as_attribute('_'))
         self.curl.setopt(URL, urljoin(conf.clients.instance().URL, 'admin/'))
 
     def run(self):
