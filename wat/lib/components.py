@@ -22,7 +22,6 @@ import pycurl
 import importlib
 from datetime import date
 
-from wat.lib import clients
 from wat.lib.properties import *
 from wat.lib.models import Author
 from wat.lib.exceptions import ImproperlyConfigured, InvalidTypeError
@@ -60,7 +59,7 @@ class MetaComponent(type):
         if cls.__doc__:
             cls.description = cls.__doc__
         else:
-            raise AttributeError("missing description")
+            raise AttributeError("missing component description")
 
         # A little hack to add provided property available to every module class
         module = importlib.import_module(cls.__module__)
@@ -68,6 +67,9 @@ class MetaComponent(type):
         filename = filename.replace(wat.dirs.components, '')
         filename = filename.rpartition(os.path.sep)[0]
         cls.postcondition = Property(filename.replace(os.path.sep, '.')[1:])
+
+    def __str__(self):
+        return '.'.join([str(self.postcondition), self.name])
 
     def run(self):
         """Use the preconditions to provide the postcondition.
@@ -78,11 +80,11 @@ class MetaComponent(type):
 
 
 class WatComponent(object):
-    def __enter__(self):
+    def execute(self):
         try:
             provided = self.run()
         except pycurl.error as error:
-            raise error  # raise a proper wrapper error
+            raise error  # TODO: raise a proper wrapper error
 
         if hasattr(self, '__provides__'):  # if more values should be provided
             provides = __import__('.'.join([wat.packages.components, str(self.postcondition)])).__provides__
@@ -106,9 +108,7 @@ class WatComponent(object):
                 raise  # TODO: raise exception to say "return type must be dict"
 
         # 'provided' seems good. Let's save them!
-        Registry.instance()[str(self.postcondition)] = provided
-
-        return self
+        WatComponent.register([(str(self.postcondition), provided)])
 
     @staticmethod
     def precondition(prop):
@@ -140,7 +140,11 @@ class WatComponent(object):
             for prop, value in prop_value:
                 _register(prop, value)
 
-    save_as_attribute = lambda self, name: lambda value: self.__setattr__(name, value)
+    # TODO: move it in shortcuts module
+    def save_as_attribute(self, name):
+        def set_attr(value):
+            self.__setattr__(name, value)
+        return set_attr
 
 
 def iswatcomponent(cls):
