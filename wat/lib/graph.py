@@ -14,10 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from wat.conf import clients
 from wat.lib import components, search
 from wat.lib.components import WatComponent
 from wat.lib.exceptions import InvalidTypeError
-from wat.lib.properties import Property
+from wat.lib.properties import Property, Registry
 
 
 class RelaxedGraphPlan(object):
@@ -65,6 +66,9 @@ class RelaxedGraphPlan(object):
                 else:
                     raise InvalidTypeError(prop, expected=Property)
 
+            def __repr__(self):
+                return "NoOpAction('%s')" % str(self.postcondition)
+
         def __init__(self, actions=None):
             """Initialize an Action Layer from the specified actions which should be all wat components.
             :param actions: the actions to add in the action layer
@@ -95,6 +99,17 @@ class RelaxedGraphPlan(object):
 
         def remove(self, action):
             self.actions.discard(action)
+
+        @property
+        def equivalent_actions(self):
+            equivalent_actions = dict()
+            for action in self.actions:
+                postcondition = str(action.postcondition)
+                if postcondition in equivalent_actions:
+                    equivalent_actions[postcondition].add(action)
+                else:
+                    equivalent_actions[postcondition] = {action}
+            return equivalent_actions
 
         @property
         def preconditions(self):
@@ -248,11 +263,39 @@ class RelaxedGraphPlan(object):
                     for action in action_layer.actions.copy():
                         if action.postcondition not in precondition_needed:
                             action_layer.remove(action)
-                    # copy the remaining action layer at the beginning of the layered plan
-                    self.action_layers.insert(0, action_layer)
+                    # remove all the NoOpAction and check if some action remain
+                    action_layer = RelaxedGraphPlan.ActionLayer(
+                        actions=[
+                            action for action in action_layer.actions
+                            if not isinstance(action, RelaxedGraphPlan.ActionLayer.NoOpAction)
+                        ]
+                    )
+                    if len(action_layer):
+                        # copy the remaining action layer at the beginning of the layered plan
+                        self.action_layers.insert(0, action_layer)
 
-            def run(self, choose_method=None):
-                raise NotImplementedError  # TODO
+            def execute(self):
+                # TODO: add a lot of logging in here and remove print statements
+                registry = Registry.instance()
+                for layer_no, layer in enumerate(self.action_layers, start=1):
+                    print 'Layer %d' % layer_no
+                    for prop, actions in layer.equivalent_actions.iteritems():
+                        print "\tRetrieving '%s' property" % prop
+                        for action in actions:
+                            if prop not in registry:
+                                try:
+                                    print "\t\tExecuting action '%s'" % str(action)
+                                    action().execute()
+                                except Exception as e:
+                                    raise e
+                            else:
+                                # if no error raised and property was saved
+                                # go ahead with the next one
+                                break
+                        if prop not in registry:
+                            raise  # TODO: raise 'property not saved'
+                        else:
+                            print "\tProperty '%s' gained!" % prop
 
         # Termination is granted by fixed-point level.
         # A fixed-point level in a planning graph G is a level k such that for all i > k
