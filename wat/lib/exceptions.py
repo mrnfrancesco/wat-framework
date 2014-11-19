@@ -24,45 +24,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# TODO: redo all the exceptions (make it simpler) and add __all__ attribute
+__all__ = {
+    # generic
+    'WatError', 'ComponentError', 'PropertyError'
+    # failure
+    'ComponentFailure',
+    # missing
+    'PropertyDoesNotExist',
+    # misconfigured
+    'ImproperlyConfigured',
+    # invalid
+    'InvalidTypeError',
+}
 
 from functools import reduce
 import operator
 
 
-class PropertyError(Exception):
-    """The property or constraint encounter an error"""
-
-
-class PropertyDoesNotExist(PropertyError):
-    """The requested property or constraint does not exist"""
-
-
-class ComponentError(Exception):
-    """The module encounter an error"""
-
-
-class ComponentDoesNotExist(ComponentError):
-    """The requested module does not exist"""
-
-
-class ComponentFailure(ComponentError):
-    """The module failed during execution"""
-
-
-class UnableToProceedError(ComponentFailure):
-    """The module is unable to provide the requested properties"""
-
-
-class NotSupportedError(NotImplementedError):
-    """Method or function can't be implemented"""
-
-
-NON_FIELD_ERRORS = '__all__'
-
-
-class ValidationError(Exception):
-    """An error while validating data."""
+class WatError(Exception):
+    """A generic WAT Framework error"""
 
     def __init__(self, message, params=None, code=None):
         """
@@ -71,12 +51,12 @@ class ValidationError(Exception):
         an "error" can be either a simple string or an instance of
         ValidationError with its message attribute set, and what we define as
         list or dictionary can be an actual `list` or `dict` or an instance
-        of ValidationError with its `error_list` or `error_dict` attribute set.
+        of WatError with its `error_list` or `error_dict` attribute set.
         """
 
-        super(ValidationError, self).__init__(message, params, code)
+        super(WatError, self).__init__(message, params, code)
 
-        if isinstance(message, ValidationError):
+        if isinstance(message, WatError):
             if hasattr(message, 'error_dict'):
                 message = message.error_dict
             elif not hasattr(message, 'code'):
@@ -87,16 +67,16 @@ class ValidationError(Exception):
         if isinstance(message, dict):
             self.error_dict = {}
             for field, messages in message.items():
-                if not isinstance(messages, ValidationError):
-                    messages = ValidationError(messages)
+                if not isinstance(messages, WatError):
+                    messages = WatError(messages)
                 self.error_dict[field] = messages.error_list
 
         elif isinstance(message, list):
             self.error_list = []
             for message in message:
-                # Normalize plain strings to instances of ValidationError.
-                if not isinstance(message, ValidationError):
-                    message = ValidationError(message)
+                # Normalize plain strings to instances of WatError.
+                if not isinstance(message, WatError):
+                    message = WatError(message)
                 self.error_list.extend(message.error_list)
 
         else:
@@ -107,8 +87,11 @@ class ValidationError(Exception):
 
     @property
     def message_dict(self):
-        # Trigger an AttributeError if this ValidationError
-        # doesn't have an error_dict.
+        """
+        :return: a dictionary of collected errors
+        :rtype: dict
+        :raise AttributeError: if this WatError doesn't have an error_dict
+        """
         getattr(self, 'error_dict')
 
         return dict(self)
@@ -124,13 +107,13 @@ class ValidationError(Exception):
             for field, error_list in self.error_dict.items():
                 error_dict.setdefault(field, []).extend(error_list)
         else:
-            error_dict.setdefault(NON_FIELD_ERRORS, []).extend(self.error_list)
+            error_dict.setdefault('__all__', []).extend(self.error_list)
         return error_dict
 
     def __iter__(self):
         if hasattr(self, 'error_dict'):
             for field, errors in self.error_dict.items():
-                yield field, list(ValidationError(errors))
+                yield field, list(WatError(errors))
         else:
             for error in self.error_list:
                 message = error.message
@@ -144,43 +127,49 @@ class ValidationError(Exception):
         return repr(list(self))
 
     def __repr__(self):
-        return 'ValidationError(%s)' % self
+        return 'WatError(%s)' % self
 
 
-class ImproperlyConfigured(ValidationError):
+class ComponentError(WatError):
+    """The component encounter an error"""
+
+
+class PropertyError(WatError):
+    """The property encounter an error"""
+
+
+class PropertyDoesNotExist(PropertyError):
+    """The requested property does not exist"""
+
+    def __init__(self, message, params=None):
+        super(PropertyDoesNotExist, self).__init__(message, params, code='missing')
+
+
+class ComponentFailure(ComponentError):
+    """The module failed during execution"""
+
+    def __init__(self, message, params=None):
+        super(ComponentFailure, self).__init__(message, params, code='failure')
+
+
+class ImproperlyConfigured(WatError):
     """WAT Framework is somehow improperly configured"""
 
     def __init__(self, message, params=None):
         super(ImproperlyConfigured, self).__init__(message, params, code='misconfigured')
 
 
-class InvalidPropertyError(PropertyError, ValidationError):
-    def __init__(self, message, params=None):
-        super(InvalidPropertyError, self).__init__(message, params, code='invalid')
-
-
-class EmptyValueError(ValidationError):
-    def __init__(self, param, given):
-        super(EmptyValueError, self).__init__(
-            message="'%(param)s' cannot be None or empty ('%(given)s' given)",
-            params={'param': param, 'given': given},
-            code='empty'
-        )
-
-
-class InvalidTypeError(ValidationError, TypeError):
+class InvalidTypeError(WatError, TypeError):
+    """The specified parameter type is unexpected"""
     def __init__(self, param, expected):
         if isinstance(expected, (list, tuple, set)):
-            expected = ' or '.join([repr(expected_type) for expected_type in expected])
+            super(InvalidTypeError, self).__init__(
+                message="%(param_type)s is not an instance or a subclass of %(expected)s",
+                params={
+                    'param_type': type(param),
+                    'expected': '|'.join([expected_type.__name__ for expected_type in expected])
+                },
+                code='invalid'
+            )
         else:
-            expected = repr(expected)
-        param = param if isinstance(param, str) else repr(param)
-        super(InvalidTypeError, self).__init__(
-            message="%(param)s is not an instance or a subclass of %(expected)s",
-            params={'param': param, 'expected': expected},
-            code='invalid'
-        )
-
-
-class NotCompliantComponentError(ValidationError, ComponentError):
-    pass
+            raise InvalidTypeError(param=expected, expected=(list, set, tuple))
