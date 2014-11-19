@@ -16,7 +16,7 @@
 
 from wat.lib import components, search
 from wat.lib.components import WatComponent
-from wat.lib.exceptions import InvalidTypeError
+from wat.lib.exceptions import InvalidTypeError, PropertyNotAchievedError, PropertyDoesNotExist, WatError
 from wat.lib.properties import Property, Registry
 
 
@@ -91,16 +91,28 @@ class RelaxedGraphPlan(object):
             return len(self.actions)
 
         def add(self, action):
+            """Add an action to the current action layer
+            :param action: the action to add
+            :type action: RelaxedGraphPlan.ActionLayer.NoOpAction|WatComponent
+            :raise InvalidTypeError: if the specified action is not a NoOpAction or a WatComponent
+            """
             if isinstance(action, RelaxedGraphPlan.ActionLayer.NoOpAction) or components.iswatcomponent(action):
                 self.actions.add(action)
             else:
-                raise  # TODO: raise an "invalid action error"
+                raise InvalidTypeError(action, (RelaxedGraphPlan.ActionLayer.NoOpAction, WatComponent))
 
         def remove(self, action):
+            """Remove the specified action from the current action layer if it is present in it, otherwise do nothing
+            :param action: the action to remove
+            """
             self.actions.discard(action)
 
         @property
         def equivalent_actions(self):
+            """Two actions a1 and a2 are equivalent iff postcondition(a1) = postcondition(a2)
+            :return: all the actions in the current action layer, grouped by postcondition provided
+            :rtype: dict[WatComponent]
+            """
             equivalent_actions = dict()
             for action in self.actions:
                 postcondition = str(action.postcondition)
@@ -171,7 +183,7 @@ class RelaxedGraphPlan(object):
         elif initial_state is None:
             self.initial_state = set()  # it's ok to have no user-provided properties
         else:
-            raise InvalidTypeError(param=initial_state, expected=(list, set, tuple))
+            raise InvalidTypeError(initial_state, (list, set, tuple, type(None)))
 
         # Check and register goal state
         if isinstance(goal_state, (list, set, tuple)):
@@ -183,15 +195,21 @@ class RelaxedGraphPlan(object):
                     goal_state_errors.add(prop)
                 else:
                     filtered_goal_state.add(prop)
-                if fail_on_invalid and goal_state_errors:
-                    raise  # TODO: raise all collected goal state errors
-                elif goal_state_errors:
-                    pass  # TODO: log all collected goal state errors
+            goal_state_errors = [PropertyDoesNotExist(prop) for prop in goal_state_errors]
+            if fail_on_invalid and goal_state_errors:
+                raise WatError(message=goal_state_errors, code='invalid')
+            elif goal_state_errors:
+                pass  # TODO: log all collected goal state errors
+            if filtered_goal_state:
                 self.goal_state = filtered_goal_state
+            else:
+                raise WatError(message='Empty goal state', code='failure')
         elif goal_state is None:
             # It means that you want to see what properties you can
             # achieve with the given properties as initial state
             self.goal_state = None
+        else:
+            raise InvalidTypeError(self.goal_state, (list, set, tuple, type(None)))
 
         self.__uncollected_actions = set(search.all_components())
         self.__collected_actions = set()  # it collects all the already seen components to avoid loops
@@ -225,15 +243,16 @@ class RelaxedGraphPlan(object):
 
     def __goal_reached(self):
         """Check if the specified goal state was reached or not.
-        :return: None if no goal state was specified, True if the last action layer contains the goal state, False otherwise
-        :rtype: bool|None
+        :returns None: if no goal state was specified
+        :returns True: if the last action layer contains the goal state
+        :returns False: otherwise
         """
         return self.goal_state.issubset(self.action_layers[-1].property_layer) if self.goal_state else None
 
     def __solution_possible(self):
         """Check if is it possible to reach the goal state.
-        :return: True if goal is already reached or if the graph is expandable, False if fixed point was reached without solution.
-        :rtype: bool
+        :returns True: if goal is already reached or if the graph is expandable
+        :returns False: if fixed point was reached without solution
         """
         if self.__goal_reached():
             return True
@@ -285,14 +304,14 @@ class RelaxedGraphPlan(object):
                                 try:
                                     print "\t\tExecuting action '%s'" % str(action)
                                     action().execute()
-                                except Exception as e:
+                                except Exception as e:  # TODO: catch real exceptions
                                     raise e
                             else:
                                 # if no error raised and property was saved
                                 # go ahead with the next one
                                 break
                         if prop not in registry:
-                            raise  # TODO: raise 'property not saved'
+                            raise PropertyNotAchievedError(prop)
                         else:
                             print "\tProperty '%s' gained!" % prop
 

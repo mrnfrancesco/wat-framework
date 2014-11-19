@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import wat
 
 __all__ = ['info', 'MetaComponent', 'WatComponent']
@@ -24,7 +25,7 @@ from datetime import date
 
 from wat.lib.properties import *
 from wat.lib.models import Author
-from wat.lib.exceptions import ImproperlyConfigured, InvalidTypeError
+from wat.lib.exceptions import ImproperlyConfigured, InvalidTypeError, ClientError
 
 
 def info(authors, released, updated, preconditions=None, version='unknown'):
@@ -83,8 +84,8 @@ class WatComponent(object):
     def execute(self):
         try:
             provided = self.run()
-        except pycurl.error as error:
-            raise error  # TODO: raise a proper wrapper error
+        except pycurl.error as e:
+            raise ClientError(pycurl_error=e)
 
         if hasattr(self, '__provides__'):  # if more values should be provided
             provides = __import__('.'.join([wat.packages.components, str(self.postcondition)])).__provides__
@@ -105,7 +106,7 @@ class WatComponent(object):
                             params={'properties': list(set(provides).difference(provided.keys()))}
                         )
             else:
-                raise  # TODO: raise exception to say "return type must be dict"
+                raise InvalidTypeError(provided, (dict,))
 
         # 'provided' seems good. Let's save them!
         WatComponent.register([(str(self.postcondition), provided)])
@@ -121,11 +122,13 @@ class WatComponent(object):
         present into the preconditions registry.
 
         All the <property,value> pairs MUST be in the form of:
-         - dict, `WatComponent.register({'prop': value,})`
-         - list, `WatComponent.register([(prop, value),])`
-         - set, `WatComponent.register({(prop, value),})`
+         - dict,  `WatComponent.register({'prop': value,})`
+         - list,  `WatComponent.register([(prop, value),])`
+         - set,   `WatComponent.register({(prop, value),})`
 
         :param prop_value: all the <property,value> pairs to register
+        :type prop_value: dict|list[tuple]|set[tuple]|tuple[tuple]
+        :raise InvalidTypeError: if the pairs to register are not in a dict, list or set
         """
         registry = Registry.instance()
 
@@ -133,22 +136,33 @@ class WatComponent(object):
             if key not in registry:
                 registry[key] = val
 
-        if isinstance(prop_value, dict):
-            for prop in prop_value:
-                _register(prop, prop_value[prop])
+        if isinstance(prop_value, (dict, list, set)):
+            if isinstance(prop_value, dict):
+                for prop in prop_value:
+                    _register(prop, prop_value[prop])
+            else:
+                for prop, value in prop_value:
+                    _register(prop, value)
         else:
-            for prop, value in prop_value:
-                _register(prop, value)
+            raise InvalidTypeError(prop_value, (dict, list, set))
 
-    # TODO: move it in shortcuts module
     def save_as_attribute(self, name):
+        """
+        :param name: the name of the attribute to create into the component
+        :type name: str
+        :return: a function which create an attribute with the specified name into the component
+        :rtype: function
+        """
         def set_attr(value):
+            """Create an attribute with the specified name and value into the component
+            :param value: the value to give to the attribute
+            """
             self.__setattr__(name, value)
         return set_attr
 
 
 def iswatcomponent(cls):
-    """
+    """Check if the specified class is a Wat component
     :param cls: the class you want to know if it is a Wat component
     :type cls: class
     :rtype: bool
@@ -158,10 +172,10 @@ def iswatcomponent(cls):
 
 
 def module_from(path):
-    """
-    Return the dotted notation name of a module from its path.
+    """Return the dotted notation name of a module from its path.
      Note that the returned string is ready to be imported.
     :param path: the absolute path of the module you want to convert
     :return: the module package and name in dotted notation
+    :rtype: str
     """
     return path.replace(wat.dirs.install, '').replace(os.path.sep, '.')[1:]

@@ -20,6 +20,7 @@ from pkgutil import walk_packages, os
 
 from wat.lib.components import iswatcomponent, module_from
 import wat
+from wat.lib.exceptions import PropertyDoesNotExist
 
 
 def submoduleof(module):
@@ -47,7 +48,7 @@ def search(prop=None, preconditions=None):
                     except ImportError:
                         continue
         except ImportError:
-            raise  # TODO: wrap it with a proper exception to say "no property named like this"
+            raise PropertyDoesNotExist(prop)
 
     if preconditions is not None:
         # if we have no components, get them all and then filter by preconditions
