@@ -27,8 +27,10 @@
 __all__ = {
     # generic
     'WatError', 'ComponentError', 'PropertyError'
+    # error
+    'ClientError'
     # failure
-    'ComponentFailure',
+    'ComponentFailure', 'PropertyNotAchievedError'
     # missing
     'PropertyDoesNotExist',
     # misconfigured
@@ -131,18 +133,44 @@ class WatError(Exception):
 
 
 class ComponentError(WatError):
-    """The component encounter an error"""
+    """The component encountered an error"""
+
+
+class ClientError(WatError):
+    """The client encountered an error"""
+
+    def __init__(self, pycurl_error):
+        """
+        Wrap a pycurl.error object
+        :param pycurl_error: the pycurl.error raised
+        :type pycurl_error: pycurl.error
+        """
+        super(ClientError, self).__init__(message=pycurl_error.args[1], code='error')
 
 
 class PropertyError(WatError):
-    """The property encounter an error"""
+    """The property encountered an error"""
 
 
 class PropertyDoesNotExist(PropertyError):
     """The requested property does not exist"""
 
-    def __init__(self, message, params=None):
-        super(PropertyDoesNotExist, self).__init__(message, params, code='missing')
+    def __init__(self, prop):
+        super(PropertyDoesNotExist, self).__init__(
+            message="Property '%(property)s' does not exists",
+            params={'property': prop},
+            code='missing'
+        )
+
+
+class PropertyNotAchievedError(PropertyError):
+    """The requested property has not been achieved"""
+    def __init__(self, prop):
+        super(PropertyNotAchievedError, self).__init__(
+            message="All the components failed to achieve property '%(property)s'",
+            params={'property': prop},
+            code='failure'
+        )
 
 
 class ComponentFailure(ComponentError):
