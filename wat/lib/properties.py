@@ -13,13 +13,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import wat
 
 __all__ = ['Registry', 'Property', 'Constraint']
 
 from singleton.singleton import Singleton
 
-from wat.lib.exceptions import PropertyDoesNotExist, InvalidTypeError
+import wat
+from wat.lib.exceptions import InvalidTypeError
 
 
 @Singleton
@@ -72,28 +72,3 @@ class Constraint(Property):
         if expected is not None:
             self.expected_value = expected
         self.compare = lambda value: getattr(str(value), '__%s__' % compare)(self.expected_value)
-
-
-def properties(parent, children):
-    """It is just a shortcut to avoid repeat same code many times in cases in which you have the same parent
-    for many children.
-    The following code is completely equivalent::
-
-        #short version
-        properties("aaa.bbb.ccc", ["ee", "ff", "gg"])
-
-        #long version
-        Property("aaa.bbb.ccc.ee")
-        Property("aaa.bbb.ccc.ff")
-        Property("aaa.bbb.ccc.gg")
-
-    :param parent: the common properties parent
-    :type parent: str
-    :param children: the list of all the properties name with common specified parent
-    :type children: list[str]
-    :return: a list of `Property` objects with common parent and specified names
-    :rtype: list[Property]
-    :raise `PropertyNameSyntaxError`: if at least one of the resulting property name
-                                    is not compliance with choosen naming convention
-    """
-    return [Property(".".join([parent, child])) for child in children]
