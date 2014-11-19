@@ -74,7 +74,10 @@ class GetVersionByFooter(WatComponent):
                     else:
                         raise ComponentFailure('Version not found')
                 elif re.search(r'<footer id="footer">', self.body) is not None:
-                    return '2.0.0.0'
+                    if __last_version__ == '2.0.0.0':
+                        return '2.0.0.0'
+                    else:
+                        raise ComponentFailure('Cannot determine the exact version (>= 2.0.0.0 found)')
                 else:
                     raise ComponentFailure('Regexp fails')
         else:
