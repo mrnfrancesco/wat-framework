@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from wat.conf import clients
 from wat.lib import components, search
 from wat.lib.components import WatComponent
 from wat.lib.exceptions import InvalidTypeError
@@ -317,8 +316,9 @@ class RelaxedGraphPlan(object):
                         return None  # No solution found
 
 
+# from wat import conf
 # # set a target
-# clients.instance().URL = 'http://demo.opencart.com/'
+# conf.clients.instance().URL = 'http://demo.opencart.com/'
 # # build the planning graph problem
 # rgp = RelaxedGraphPlan(
 #     initial_state=[('website.cms.name', 'opencart')],
@@ -330,7 +330,10 @@ class RelaxedGraphPlan(object):
 # # if goal was specified show only goal state properties
 # if rgp.goal_state is not None:
 #     print "Goal state:"
-#     results = dict((prop, value) for prop, value in Registry.instance().iteritems() if Property(prop) in rgp.goal_state)
+#     results = dict(
+#         (prop, value) for prop, value in Registry.instance().iteritems()
+#         if Property(prop) in rgp.goal_state
+#     )
 # # if no goal was specified show all retrieved properties
 # else:
 #     print "All retrieved properties:"
