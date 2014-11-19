@@ -13,7 +13,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import wat
 
 __all__ = ['clients']
 
@@ -21,16 +20,22 @@ from pycurl import *
 
 from singleton.singleton import Singleton
 
+import wat
+
 
 @Singleton
 class clients(object):
-    # TODO: finish to write the documentation (above class too)
     """
-    see <http://curl.haxx.se/libcurl/c/curl_easy_setopt.html> for a complete list of all the options,
-    their meaning and default values
+    Collect all the curl client options to use as default on client initialization.
+    These options mirrors the one on libcurl, so you can see <http://curl.haxx.se/libcurl/c/curl_easy_setopt.html>
+    for a complete list of all the available options, their meaning and default values.
+
+    You could modify options:
+        * **here**, to make them available on every framework start
+        * **programmatically**, to make them available on that start only
     """
 
-    __slots__ = {
+    __all__ = {
         # BEHAVIOR OPTIONS
         'VERBOSE', 'HEADER', 'NOPROGRESS', 'NOSIGNAL',
         # CALLBACK OPTIONS

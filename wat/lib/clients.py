@@ -31,10 +31,11 @@ def __initializedcurl(cls):
     :return: an initialized instance of the specified pyCurl class
     """
     curl = cls()
-    for option in conf.clients.instance().__slots__:
-        if hasattr(conf.clients, option) and hasattr(pycurl, option):
+    client_conf = conf.clients.instance()
+    for option in client_conf.__all__:
+        if hasattr(client_conf, option) and hasattr(pycurl, option):
             try:
-                curl.setopt(getattr(pycurl, option), getattr(conf.clients.instance(), option))
+                curl.setopt(getattr(pycurl, option), getattr(client_conf, option))
             except TypeError as e:
                 raise ImproperlyConfigured(
                     message=e.message + " (option: '%(option)s')",
