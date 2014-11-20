@@ -32,8 +32,8 @@ from wat.lib.properties import Property, Constraint
         Author(email="francesco.mrn24@gmail.com", name="Francesco Marano", nickname="mrnfrancesco"),
     ],
     released=date(2014, 10, 18),
-    updated=date(2014, 11, 15),
-    version='0.1.0',
+    updated=date(2014, 11, 19),
+    version='0.2.0',
     preconditions=[
         Constraint("website.cms.name", "opencart", 'eq'),
         Property("website.cms.opencart.admin.directory"),
