@@ -16,8 +16,11 @@
 
 from wat.lib import components, search
 from wat.lib.components import WatComponent
-from wat.lib.exceptions import InvalidTypeError, PropertyNotAchievedError, PropertyDoesNotExist, WatError
+from wat.lib.exceptions import InvalidTypeError, PropertyNotAchievedError, PropertyDoesNotExist, WatError, \
+    InvalidComponentError, ClientError, ComponentFailure
 from wat.lib.properties import Property, Registry
+
+import logging
 
 
 class RelaxedGraphPlan(object):
@@ -159,8 +162,8 @@ class RelaxedGraphPlan(object):
         :param fail_on_invalid: specify if the initialization have to fail on invalid input (set it to True) or it simply ignore the invalid input and go ahead (set it to False). **Default** is *False*.
         :type fail_on_invalid: bool
 
-        :raise: If the initial state or goal state are not of the required type
-        :raise: If there is at least an invalid initial state or goal state and *fail_on_invalid* is set to True
+        :raise InvalidTypeError: If the initial state or goal state are not of the required type
+        :raise WatError: If there is at least an invalid initial state or goal state and *fail_on_invalid* is set to True
         """
         # Check and register initial state
         filtered_initial_state = set()
@@ -172,14 +175,14 @@ class RelaxedGraphPlan(object):
                         WatComponent.register({prop: value})
                         filtered_initial_state.add(Property(prop))
                     else:
-                        differences.add(Property(prop))
+                        differences.add(prop)
                 if fail_on_invalid and differences:
-                    raise  # TODO: raise an error with differences in it
+                    raise WatError([InvalidTypeError(prop, (str,)) for prop in differences])
                 elif differences:
                     pass  # TODO: log the differences from the two ensambles
                 self.initial_state = filtered_initial_state
             else:
-                raise  # TODO: raise "only pair tuple accepted"
+                raise WatError(message='Only pair tuple accepted', code='invalid')
         elif initial_state is None:
             self.initial_state = set()  # it's ok to have no user-provided properties
         else:
@@ -293,27 +296,32 @@ class RelaxedGraphPlan(object):
                         self.action_layers.insert(0, action_layer)
 
             def execute(self):
-                # TODO: add a lot of logging in here and remove print statements
+                # TODO: better execution implementation (try to use some stack)
+                # TODO: add a lot of logging in here and remove print statements (subclassing logging Handler)
                 registry = Registry.instance()
                 for layer_no, layer in enumerate(self.action_layers, start=1):
-                    print 'Layer %d' % layer_no
+                    print '\n\033[33m[Layer %d]\033[0m' % layer_no
                     for prop, actions in layer.equivalent_actions.iteritems():
-                        print "\tRetrieving '%s' property" % prop
                         for action in actions:
                             if prop not in registry:
+                                print "\033[34mRetrieving '%s' property\033[0m" % prop
                                 try:
-                                    print "\t\tExecuting action '%s'" % str(action)
+                                    print "\033[32mExecuting component '%s'\033[0m" % str(action)
                                     action().execute()
-                                except Exception as e:  # TODO: catch real exceptions
-                                    raise e
+                                except (InvalidComponentError, ClientError, ComponentFailure) as e:
+                                    if hasattr(e, 'code'):
+                                        print "\033[31m%(code)s: %(message)s\033[0m" % {'code': e.code,
+                                                                                            'message': e.messages}
+                                    else:
+                                        print "\033[31mfailure: %(messages)s\033[0m" % {'messages': e.messages}
                             else:
                                 # if no error raised and property was saved
                                 # go ahead with the next one
                                 break
                         if prop not in registry:
-                            raise PropertyNotAchievedError(prop)
-                        else:
-                            print "\tProperty '%s' gained!" % prop
+                            e = PropertyNotAchievedError(prop)
+                            print "\033[1;31m%(code)s: %(message)s\033[0m" % {'code': e.code, 'message': e.messages}
+                            # TODO: remove all the actions depending on that property recursively on every layer
 
         # Termination is granted by fixed-point level.
         # A fixed-point level in a planning graph G is a level k such that for all i > k
@@ -333,30 +341,3 @@ class RelaxedGraphPlan(object):
                         return LayeredPlan(self)  # return all as solution
                     else:  # fixed-point level was reached, but goal state was not
                         return None  # No solution found
-
-
-# from wat import conf
-# # set a target
-# conf.clients.instance().URL = 'http://demo.opencart.com/'
-# # build the planning graph problem
-# rgp = RelaxedGraphPlan(
-#     initial_state=[('website.cms.name', 'opencart')],
-#     fail_on_invalid=True
-# )
-# # find and execute a solution
-# rgp.solution.execute()
-#
-# # if goal was specified show only goal state properties
-# if rgp.goal_state is not None:
-#     print "Goal state:"
-#     results = dict(
-#         (prop, value) for prop, value in Registry.instance().iteritems()
-#         if Property(prop) in rgp.goal_state
-#     )
-# # if no goal was specified show all retrieved properties
-# else:
-#     print "All retrieved properties:"
-#     results = Registry.instance()
-# # print the results
-# for prop, value in results.iteritems():
-#     print "%s\t=>\t%s" % (prop, str(value))
