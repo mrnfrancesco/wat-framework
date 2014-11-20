@@ -25,7 +25,8 @@ from datetime import date
 
 from wat.lib.properties import *
 from wat.lib.models import Author
-from wat.lib.exceptions import ImproperlyConfigured, InvalidTypeError, ClientError
+from wat.lib.exceptions import InvalidTypeError, ClientError, InvalidComponentError, \
+    ConstraintViolationError, ComponentFailure
 
 
 def info(authors, released, updated, preconditions=None, version='unknown'):
@@ -82,6 +83,24 @@ class MetaComponent(type):
 
 class WatComponent(object):
     def execute(self):
+        """Execute the component and register the provided property.
+
+        :raise InvalidComponentError: if *__provides__* was specified, but the component returns does not match it or is not a dict
+        :raise ClientError: if some pycurl.error occurred during component running
+        :raise ComponentFailure: if component somehow fails
+        """
+        constraints = [
+            constraint for constraint in self.preconditions
+            if isinstance(constraint, Constraint)
+        ]
+        if constraints:
+            violations = [
+                ConstraintViolationError(constraint) for constraint in constraints
+                if constraint.compare() is False
+            ]
+            if violations:
+                raise ComponentFailure(message=violations)
+
         try:
             provided = self.run()
         except pycurl.error as e:
@@ -92,21 +111,23 @@ class WatComponent(object):
             if isinstance(provided, dict):  # provided postconditions must be a dict consistent with __provides__
 
                 if set(provided.keys()).isdisjoint(provides):
-                    raise ImproperlyConfigured("'__provides__' list and provided properties does not match")
+                    raise InvalidComponentError("'__provides__' list and provided properties does not match")
 
                 if len(provided) is not len(provides):
                     if len(provided) > len(provides):
-                        raise ImproperlyConfigured(
+                        raise InvalidComponentError(
                             message="only properties in '__provides__' list must be returned, extra '%(properties)s'",
                             params={'properties': list(set(provided.keys()).difference(provides))}
                         )
                     else:
-                        raise ImproperlyConfigured(
+                        raise InvalidComponentError(
                             message="all properties in '__provides__' list must be returned, missing '%(properties)s'",
                             params={'properties': list(set(provides).difference(provided.keys()))}
                         )
             else:
-                raise InvalidTypeError(provided, (dict,))
+                raise InvalidComponentError(
+                    message=InvalidTypeError(provided, (dict,))
+                )
 
         # 'provided' seems good. Let's save them!
         WatComponent.register([(str(self.postcondition), provided)])
@@ -153,11 +174,13 @@ class WatComponent(object):
         :return: a function which create an attribute with the specified name into the component
         :rtype: function
         """
+
         def set_attr(value):
             """Create an attribute with the specified name and value into the component
             :param value: the value to give to the attribute
             """
             self.__setattr__(name, value)
+
         return set_attr
 
 

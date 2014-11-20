@@ -36,7 +36,9 @@ __all__ = {
     # misconfigured
     'ImproperlyConfigured',
     # invalid
-    'InvalidTypeError',
+    'InvalidTypeError', 'InvalidComponentError',
+    # violation
+    'ConstraintViolationError',
 }
 
 from functools import reduce
@@ -173,6 +175,21 @@ class PropertyNotAchievedError(PropertyError):
         )
 
 
+class ConstraintViolationError(PropertyError, AssertionError):
+    """The constraint was violated"""
+
+    def __init__(self, constraint):
+        """
+        :param constraint: the constraint object that was violated
+        :type constraint: Constraint
+        """
+        super(ConstraintViolationError, self).__init__(
+            message="Constraint was violated for property '%(prop)s' (expected %(fn)s: '%(expected)s')",
+            params={'prop': constraint.name, 'fn': constraint.compare_fn, 'expected': constraint.expected_value},
+            code='violation'
+        )
+
+
 class ComponentFailure(ComponentError):
     """The module failed during execution"""
 
@@ -185,6 +202,13 @@ class ImproperlyConfigured(WatError):
 
     def __init__(self, message, params=None):
         super(ImproperlyConfigured, self).__init__(message, params, code='misconfigured')
+
+
+class InvalidComponentError(ComponentError):
+    """The component is not compliant with the standards"""
+
+    def __init__(self, message, params=None):
+        super(InvalidComponentError, self).__init__(message, params, code='invalid')
 
 
 class InvalidTypeError(WatError, TypeError):
