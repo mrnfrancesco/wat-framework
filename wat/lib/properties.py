@@ -67,8 +67,11 @@ class Property(object):
 
 
 class Constraint(Property):
-    def __init__(self, name, expected, compare='eq'):
+    def __init__(self, name, expected, compare_fn='eq'):
         super(Constraint, self).__init__(name)
         if expected is not None:
             self.expected_value = expected
-        self.compare = lambda value: getattr(str(value), '__%s__' % compare)(self.expected_value)
+        self.compare_fn = compare_fn
+
+    def compare(self):
+        return getattr(Registry.instance()[self.name], '__%s__' % self.compare_fn)(self.expected_value)
