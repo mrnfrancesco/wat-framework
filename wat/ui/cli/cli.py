@@ -15,8 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from wat import conf
+from wat.lib.exceptions import InvalidTypeError, WatError
 from wat.lib.graph import RelaxedGraphPlan
 from wat.lib.properties import Property, Registry
+from wat.lib.shortcuts import hierlogger as logger
 
 
 def banner():
@@ -39,15 +41,25 @@ def banner():
 def main():
     print banner()
 
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+
     # set a target
     conf.clients.instance().URL = 'http://demo.opencart.com'
     # build the planning graph problem
-    rgp = RelaxedGraphPlan(
-        initial_state=[
-            ('website.cms.name', 'opencart'),
-        ],
-        fail_on_invalid=True
-    )
+    try:
+        rgp = RelaxedGraphPlan(
+            initial_state=[
+                ('website.cms.name', 'opencart'),
+            ],
+            goal_state=['website.cms.opencart.version'],
+            fail_on_invalid=True
+        )
+    except (InvalidTypeError, WatError) as errors:
+        for error in errors:
+            logger().critical(error)
+        import sys
+        sys.exit(1)
     # find and execute a solution
     rgp.solution.execute()
 
