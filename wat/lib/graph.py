@@ -322,9 +322,9 @@ class RelaxedGraphPlan(object):
                 for layer_no, layer in enumerate(self.action_layers, start=1):
                     _logger.debug("Executing action layer '%d'" % layer_no)
                     for prop, actions in layer.equivalent_actions.iteritems():
+                        _logger.info("Retrieving '%s' property" % prop)
                         for component in actions:
                             if prop not in registry:
-                                _logger.info("Retrieving '%s' property" % prop)
                                 try:
                                     _logger.debug("Executing component '%s'" % component)
                                     component().execute()
@@ -333,9 +333,9 @@ class RelaxedGraphPlan(object):
                                         'code': error.code if hasattr(error, 'code') else 'failure',
                                         'message': error.messages
                                     })
-                            else:
                                 # if no error raised and property was saved
                                 # go ahead with the next one
+                                _logger.info("Property '%s' succesfully retrieved" % prop)
                                 break
                         if prop not in registry:
                             _logger.error(PropertyNotAchievedError(prop))
