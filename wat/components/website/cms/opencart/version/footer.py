@@ -32,8 +32,8 @@ from wat.lib.properties import Property, Constraint
         Author(email="francesco.mrn24@gmail.com", name="Francesco Marano", nickname="mrnfrancesco"),
     ],
     released=date(2014, 10, 18),
-    updated=date(2014, 11, 19),
-    version='0.2.0',
+    updated=date(2014, 11, 21),
+    version='0.2.1',
     preconditions=[
         Constraint("website.cms.name", "opencart", 'eq'),
         Property("website.cms.opencart.admin.directory"),
@@ -79,6 +79,6 @@ class GetVersionByFooter(WatComponent):
                     else:
                         raise ComponentFailure('Cannot determine the exact version (>= 2.0.0.0 found)')
                 else:
-                    raise ComponentFailure('Regexp fails')
+                    raise ComponentFailure('Cannot determine opencart version')
         else:
             raise ComponentFailure("Server response HTTP status code was '%d', 200 expected" % http_code)
