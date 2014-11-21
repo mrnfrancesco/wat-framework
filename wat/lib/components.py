@@ -61,7 +61,7 @@ class MetaComponent(type):
         if cls.__doc__:
             cls.description = cls.__doc__
         else:
-            raise AttributeError("missing component description")
+            raise InvalidComponentError("missing component description")
 
         # A little hack to add provided property available to every module class
         module = importlib.import_module(cls.__module__)
