@@ -43,31 +43,41 @@ def properties(parent, children):
     return [Property(".".join([parent, child])) for child in children]
 
 
-def hierlogger(level=3):
+def hierlogger(depth=3):
     """
     Provide a logger instance with no need to specify the name, cause it will get it automagically.
+    To use it just import the method at module level with
 
-    Thanks to Zaar Hai answer to `logger chain in python <http://stackoverflow.com/a/3060995/3549503>`_
-    question on stackoverflow!
+    >>> from wat.lib.shortcuts import hierlogger as logger
 
-    :param level: the depth level of the provided logger (use 1: module only, 2: module.class, 3: module.class.method)
-    :type level: int
+    Then use it in whatever level you want (module, function, class or method), e.g.:
+
+    >>> if __name__ == '__main__':
+    >>>     logger().info('info message')
+
+    Remember **NOT** to call `logging.basicConfig()`! It should be done by user interface.
+
+    :param depth: the depth level of the provided logger (1: module only, 2: module.class, 3: module.class.method)
+    :type depth: int
     :return: a logger object
     :rtype: logging.Logger
+
+    *Thanks to Zaar Hai answer to* `logger chain in python <http://stackoverflow.com/a/3060995/3549503>`_
+    *question on stackoverflow!*
     """
     caller_frame = inspect.stack()[1]
     caller = caller_frame[0]
-    lname = '__hierlogger%(level)s__' % {'level': str(level)}
+    lname = '__hierlogger%(depth)s__' % {'depth': str(depth)}
     if lname not in caller.f_locals:
         logger_name = str()
-        if level >= 1:
+        if depth >= 1:
             try:
                 logger_name += inspect.getmodule(inspect.stack()[1][0]).__name__
             except:
                 pass
-        if level >= 2 and 'self' in caller.f_locals:
+        if depth >= 2 and 'self' in caller.f_locals:
             logger_name += ('.' if logger_name else '') + caller.f_locals['self'].__class__.__name__
-        if level >= 3 and caller_frame[3]:
+        if depth >= 3 and caller_frame[3]:
             logger_name += ('.' if logger_name else '') + caller_frame[3]
             logger = logging.getLogger(logger_name)
             logger.addHandler(logging.NullHandler())
