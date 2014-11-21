@@ -13,6 +13,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import logging
+import inspect
+
 from wat.lib.properties import Property
 
 
@@ -37,3 +41,35 @@ def properties(parent, children):
     :raise `InvalidTypeError`: if the parent or children type is not the specified one
     """
     return [Property(".".join([parent, child])) for child in children]
+
+
+def hierlogger(level=3):
+    """
+    Provide a logger instance with no need to specify the name, cause it will get it automagically.
+
+    Thanks to Zaar Hai answer to `logger chain in python <http://stackoverflow.com/a/3060995/3549503>`_
+    question on stackoverflow!
+
+    :param level: the depth level of the provided logger (use 1: module only, 2: module.class, 3: module.class.method)
+    :type level: int
+    :return: a logger object
+    :rtype: logging.Logger
+    """
+    caller_frame = inspect.stack()[1]
+    caller = caller_frame[0]
+    lname = '__hierlogger%(level)s__' % {'level': str(level)}
+    if lname not in caller.f_locals:
+        logger_name = str()
+        if level >= 1:
+            try:
+                logger_name += inspect.getmodule(inspect.stack()[1][0]).__name__
+            except:
+                pass
+        if level >= 2 and 'self' in caller.f_locals:
+            logger_name += ('.' if logger_name else '') + caller.f_locals['self'].__class__.__name__
+        if level >= 3 and caller_frame[3]:
+            logger_name += ('.' if logger_name else '') + caller_frame[3]
+            logger = logging.getLogger(logger_name)
+            logger.addHandler(logging.NullHandler())
+            caller.f_locals[lname] = logger
+    return caller.f_locals[lname]
