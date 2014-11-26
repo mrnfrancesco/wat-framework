@@ -79,7 +79,7 @@ def hierlogger(depth=3):
             logger_name += ('.' if logger_name else '') + caller.f_locals['self'].__class__.__name__
         if depth >= 3 and caller_frame[3]:
             logger_name += ('.' if logger_name else '') + caller_frame[3]
-            logger = logging.getLogger(logger_name)
-            logger.addHandler(logging.NullHandler())
-            caller.f_locals[lname] = logger
+        logger = logging.getLogger(logger_name)
+        logger.addHandler(logging.NullHandler())
+        caller.f_locals[lname] = logger
     return caller.f_locals[lname]
