@@ -20,6 +20,8 @@ from wat.lib.graph import RelaxedGraphPlan
 from wat.lib.properties import Property, Registry
 from wat.lib.shortcuts import hierlogger as logger
 
+from log import config as logging_config
+
 
 def banner():
     return r"""
@@ -40,9 +42,7 @@ def banner():
 
 def main():
     print banner()
-
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
+    logging_config(colored=True, debugging=False, level='debug')
 
     # set a target
     conf.clients.instance().URL = 'http://demo.opencart.com'
