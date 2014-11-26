@@ -14,8 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+
 from wat import conf
-from wat.lib.exceptions import InvalidTypeError, WatError
+from wat.lib.exceptions import InvalidTypeError, WatError, ClientError
 from wat.lib.graph import RelaxedGraphPlan
 from wat.lib.properties import Property, Registry
 from wat.lib.shortcuts import hierlogger as logger
@@ -46,22 +48,30 @@ def main():
 
     # set a target
     conf.clients.instance().URL = 'http://demo.opencart.com'
+
     # build the planning graph problem
     try:
         rgp = RelaxedGraphPlan(
             initial_state=[
-                ('website.cms.name', 'opencart'),
+                ('website.cms.name', 'opencart')
             ],
-            goal_state=['website.cms.opencart.version'],
+            # goal_state=['website.cms.opencart.version'],
             fail_on_invalid=True
         )
     except (InvalidTypeError, WatError) as errors:
         for error in errors:
             logger().critical(error)
-        import sys
         sys.exit(1)
-    # find and execute a solution
-    rgp.solution.execute()
+
+    solution = rgp.solution
+    if solution is None:
+        sys.exit()
+    try:
+        solution.execute()
+    except ClientError as error:
+        for message in error.messages:
+            logger().critical(message)
+        sys.exit()
 
     # if goal was specified show only goal state properties
     if rgp.goal_state is not None:
@@ -74,9 +84,11 @@ def main():
         results = Registry.instance()
     # print the results
     if results:
-        print "\n\033[33m[Retrieved properties]\033[0m"
-        for prop, value in results.iteritems():
-            print "\033[35m%s\033[0m: %s" % (prop, str(value))
+        print
+        print "Retrieved properties:"
+        for index, prop_value in enumerate(results.iteritems(), start=1):
+            prop, value = prop_value
+            print "\t%d.\t%s:\t%s" % (index, prop, str(value))
 
 
 if __name__ == '__main__':
