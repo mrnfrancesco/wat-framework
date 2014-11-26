@@ -288,6 +288,12 @@ class RelaxedGraphPlan(object):
         class LayeredPlan(object):
 
             def __init__(self, planning_graph):
+                # copy the goal state as property name list
+                if planning_graph.goal_state is not None:
+                    self.__goal_state = [str(prop) for prop in planning_graph.goal_state]
+                else:
+                    self.__goal_state = None
+                # build the action layers which represent the solution
                 self.action_layers = list()
                 # copy backwards the graph structure
                 for action_layer in planning_graph.action_layers[::-1]:
@@ -315,31 +321,37 @@ class RelaxedGraphPlan(object):
                         self.action_layers.insert(0, action_layer)
 
             def execute(self):
-                # TODO: better execution implementation (try to use some stack)
                 _logger = logger()
                 _logger.info("Executing solution")
                 registry = Registry.instance()
                 for layer_no, layer in enumerate(self.action_layers, start=1):
                     _logger.debug("Executing action layer '%d'" % layer_no)
                     for prop, actions in layer.equivalent_actions.iteritems():
-                        _logger.info("Retrieving '%s' property" % prop)
+                        _logger.debug("Retrieving '%s' property" % prop)
                         for component in actions:
                             if prop not in registry:
+                                # if the component is not runnable go ahead
+                                if not all(str(prop) in registry for prop in component.preconditions):
+                                    _logger.debug("Component '%s' is not able to run" % component)
+                                    continue
                                 try:
                                     _logger.debug("Executing component '%s'" % component)
                                     component().execute()
-                                except (InvalidComponentError, ClientError, ComponentFailure) as error:
+                                except (InvalidComponentError, ComponentFailure) as error:
                                     _logger.exception("%(code)s: %(message)s" % {
                                         'code': error.code if hasattr(error, 'code') else 'failure',
                                         'message': error.messages
                                     })
-                                # if no error raised and property was saved
-                                # go ahead with the next one
-                                _logger.info("Property '%s' succesfully retrieved" % prop)
-                                break
+                                else:
+                                    # if no error raised and property was saved
+                                    # go ahead with the next one
+                                    if self.__goal_state is None or prop in self.__goal_state:
+                                        _logger.info("Goal property '%s' succesfully retrieved" % prop)
+                                    else:
+                                        _logger.debug("Property '%s' succesfully retrieved" % prop)
+                                    break
                         if prop not in registry:
                             _logger.error(PropertyNotAchievedError(prop))
-                            # TODO: remove all the actions depending on that property recursively on every layer
                 _logger.info("Execution completed succesfully")
 
         while True:
