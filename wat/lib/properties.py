@@ -35,7 +35,7 @@ class Property(object):
         :raise InvalidTypeError: if the parameter is not a string
         """
         if isinstance(name, str):
-            self.name = name
+            self._name = name
         else:
             raise InvalidTypeError(name, (str,))
 
@@ -45,25 +45,25 @@ class Property(object):
         :rtype: bool
         """
         try:
-            __import__('.'.join([wat.packages.components, self.name]))
+            __import__('.'.join([wat.packages.components, self._name]))
         except ImportError:
             return False
         return True
 
     def __repr__(self):
-        return "Property('%s')" % self.name
+        return "Property('%s')" % self._name
 
     def __eq__(self, other):
-        return isinstance(other, Property) and self.name == other.name
+        return isinstance(other, Property) and self._name == other.name
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(self.name)
+        return hash(self._name)
 
     def __str__(self):
-        return self.name
+        return self._name
 
 
 class Constraint(Property):
@@ -74,4 +74,21 @@ class Constraint(Property):
         self.compare_fn = compare_fn
 
     def compare(self):
-        return getattr(Registry.instance()[self.name], '__%s__' % self.compare_fn)(self.expected_value)
+        return getattr(Registry.instance()[self._name], '__%s__' % self.compare_fn)(self.expected_value)
+
+    def __repr__(self):
+        return "Constraint('%s', '%s', '%s')" % (self._name, self.expected_value, self.compare_fn)
+
+    def __eq__(self, other):
+        if isinstance(other, Constraint):
+            return self._name == other._name \
+                and self.expected_value == other.expected_value \
+                and self.compare_fn == other.compare_fn
+        elif isinstance(other, Property):
+            return self._name == other._name
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash("%s%s%s" % (self._name, self.expected_value, self.compare_fn))
