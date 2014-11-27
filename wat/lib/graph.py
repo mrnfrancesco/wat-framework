@@ -338,8 +338,8 @@ class RelaxedGraphPlan(object):
                                     _logger.debug("Executing component '%s'" % component)
                                     component().execute()
                                 except (InvalidComponentError, ComponentFailure) as error:
-                                    _logger.exception("%(code)s: %(message)s" % {
-                                        'code': error.code if hasattr(error, 'code') else 'failure',
+                                    _logger.error("%(component)s: %(message)s" % {
+                                        'component': component,
                                         'message': error.messages
                                     })
                                 else:
