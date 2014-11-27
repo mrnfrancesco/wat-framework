@@ -169,7 +169,7 @@ class RelaxedGraphPlan(object):
 
         filtered_initial_state = set()
         if isinstance(initial_state, (list, set, tuple)):
-            if all(isinstance(prop_value, tuple) and len(prop_value) == 2 for prop_value in initial_state):
+            if all(len(prop_value) == 2 for prop_value in initial_state):
                 initial_state_errors = list()
                 for prop, value in initial_state:
                     if isinstance(prop, str):
