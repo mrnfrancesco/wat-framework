@@ -48,7 +48,35 @@ def main():
     options = parse_arguments()
     logging_config(colored=options.colored, debugging=options.debugging, level=options.level)
 
-    # set a target
+    if hasattr(options, 'search'):
+        from wat.lib import search
+        if options.search == 'components':
+            if options.postcondition is None and options.preconditions is None:
+                print "No postcondition and/or preconditions specified. Use --all to show all the components"
+                sys.exit()
+            components = search.components(options.postcondition, options.preconditions)
+            print "Found %d result(s)" % len(components)
+            for index, component in enumerate(components, start=1):
+                print "%(no.)d.\t%(component)s (r:%(released)s, u:%(updated)s)\n\t\t%(description)s\n" % {
+                    'no.': index,
+                    'component': component,
+                    'released': component.released,
+                    'updated': component.updated,
+                    'description': component.description,
+                }
+        elif options.search == 'properties':
+            if options.containing is None and options.not_containing is None:
+                print "No keywords specified. Use --all to show all the components"
+                sys.exit()
+            properties = search.properties(options.containing, options.not_containing)
+            logger().info("Found %d result(s)" % len(properties))
+            for index, prop in enumerate(properties, start=1):
+                print "%(no.)d.\t%(property)s" % {
+                    'no.': index,
+                    'property': prop
+                }
+        sys.exit()
+
     clients_conf = conf.clients.instance()
     clients_conf.URL = options.url
     clients_conf.PORT = options.port
@@ -61,7 +89,7 @@ def main():
         rgp = RelaxedGraphPlan(
             initial_state=options.initial_state,
             goal_state=options.goal_state,
-            fail_on_invalid=True
+            fail_on_invalid=options.fail_on_invalid
         )
     except (InvalidTypeError, WatError) as errors:
         for error in errors:
@@ -70,6 +98,7 @@ def main():
 
     solution = rgp.solution
     if solution is None:
+        print "No solution found"
         sys.exit()
     try:
         solution.execute()
