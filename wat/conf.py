@@ -79,46 +79,46 @@ class clients(object):
         'SHARE', 'NEW_FILE_PERMS', 'NEW_DIRECTORY_PERMS',
     }
 
-    ### BEHAVIOR OPTIONS ###
+    # BEHAVIOR OPTIONS
     VERBOSE = False
     NOPROGRESS = True
     NOSIGNAL = False
 
-    ### CALLBACK OPTIONS ###
+    # CALLBACK OPTIONS
     # all defaults are good for our purpose, but feel free to override them IN YOUR CURL CLIENT INSTANCE
     # in case you want to show some information in a different manner (e.g. progress information)
 
-    ### ERROR OPTIONS ###
+    # ERROR OPTIONS
     FAILONERROR = False  # specify if curl have to fail on 4xx response status code
 
-    ### NETWORK OPTIONS ###
+    # NETWORK OPTIONS
     # Accettable values are:
     #   <default>                       no proxy, but environmental one will be used
-    #   "" (empty string"               no proxy, environmental one will be ignored
+    #   "" (empty string)               no proxy, environmental one will be ignored
     #   "scheme://(hostname|ip):port"   use the specified proxy
     # PROXY = ""
     PORT = 80  # default port to use to make requests
 
-    ### NAMES and PASSWORDS OPTIONS (Authentication) ###
+    # NAMES and PASSWORDS OPTIONS (Authentication)
     # PROXYUSERNAME = "username"
     # PROXYPASSWORD = "password"
 
-    ### HTTP OPTIONS ###
+    # HTTP OPTIONS
     AUTOREFERER = False
     FOLLOWLOCATION = False  # same of MAXREDIRS = 0
     USERAGENT = "/".join([wat.project.name, wat.project.version])
     HTTPHEADER = []
     HTTP_VERSION = CURL_HTTP_VERSION_NONE  # pycurl will use whatever it thinks fit
 
-    ### TFTP OPTIONS ###
-    ### FTP OPTIONS ###
-    ### PROTOCOL OPTIONS ###
+    # TFTP OPTIONS
+    # FTP OPTIONS
+    # PROTOCOL OPTIONS
 
-    ### CONNECTION OPTIONS ###
+    # CONNECTION OPTIONS
     TIMEOUT = 0  # no timeout for the entire request
     FRESH_CONNECT = True  # same of HEADER = ["Connection: close",]
     CONNECTTIMEOUT = 30
 
-    ### SSL and SECURITY OPTIONS ###
-    ### SSH OPTIONS ###
-    ### OTHER OPTIONS ###
+    # SSL and SECURITY OPTIONS
+    # SSH OPTIONS
+    # OTHER OPTIONS
