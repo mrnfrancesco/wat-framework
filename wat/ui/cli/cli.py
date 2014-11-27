@@ -22,6 +22,7 @@ from wat.lib.graph import RelaxedGraphPlan
 from wat.lib.properties import Property, Registry
 from wat.lib.shortcuts import hierlogger as logger
 
+from arguments import parse as parse_arguments
 from log import config as logging_config
 
 
@@ -44,10 +45,16 @@ def banner():
 
 def main():
     print banner()
-    logging_config(colored=True, debugging=False, level='debug')
+    options = parse_arguments()
+    logging_config(colored=options.colored, debugging=options.debugging, level=options.level)
 
     # set a target
-    conf.clients.instance().URL = 'http://demo.opencart.com'
+    clients_conf = conf.clients.instance()
+    clients_conf.URL = options.url
+    clients_conf.PORT = options.port
+    clients_conf.FOLLOWLOCATION = options.followlocation
+    if options.proxy is not None:
+        clients_conf.PROXY = options.proxy
 
     # build the planning graph problem
     try:
@@ -92,4 +99,6 @@ def main():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) is 1:
+        sys.argv.append('--usage')
     main()
