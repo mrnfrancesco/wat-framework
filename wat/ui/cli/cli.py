@@ -15,6 +15,7 @@
 
 import sys
 
+import wat
 from wat import conf
 from wat.lib.exceptions import InvalidTypeError, WatError, ClientError
 from wat.lib.graph import RelaxedGraphPlan
@@ -27,19 +28,15 @@ from log import config as logging_config
 
 def banner():
     return r"""
-                     __      __    ______    ______
-                    /\ \  __/\ \  /\  _  \  /\__  _\
-                    \ \ \/\ \ \ \ \ \ \L\ \ \/_/\ \/
-                     \ \ \ \ \ \ \ \ \  __ \   \ \ \
-                      \ \ \_/ \_\ \ \ \ \/\ \   \ \ \
-                       \ `\___x___/  \ \_\ \_\   \ \_\
-                        `\/__//__/    \/_/\/_/    \/_/  FRAMEWORK
+         __      __    ______    ______
+        /\ \  __/\ \  /\  _  \  /\__  _\
+        \ \ \/\ \ \ \ \ \ \L\ \ \/_/\ \/
+         \ \ \ \ \ \ \ \ \  __ \   \ \ \
+          \ \ \_/ \_\ \ \ \ \/\ \   \ \ \
+           \ `\___x___/  \ \_\ \_\   \ \_\   v%(version)s
+            `\/__//__/    \/_/\/_/    \/_/  FRAMEWORK
 
-    WAT Framework  Copyright (C) 2014  Francesco Marano and individual contributors.
-    This program comes with ABSOLUTELY NO WARRANTY;
-    This is free software, and you are welcome to redistribute it
-    under certain conditions; look at doc/LICENSE for details.
-    """
+    """ % {'version': wat.project.version}
 
 
 def main():
