@@ -228,7 +228,7 @@ class RelaxedGraphPlan(object):
             else:
                 logger().info("Undefined goal state, retrieving all possible properties")
 
-        self.__uncollected_actions = set(search.all_components())
+        self.__uncollected_actions = set(search.components())
         self.__collected_actions = set()  # it collects all the already seen components to avoid loops
 
         self.action_layers = list()

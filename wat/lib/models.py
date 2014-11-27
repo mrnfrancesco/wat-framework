@@ -30,3 +30,18 @@ class Author(object):
 
     def __eq__(self, other):
         return self.email == other.email
+
+    def __repr__(self):
+        return "Author(%s)" % self.email
+
+    def __str__(self):
+        if self.name:
+            string = self.name
+            if self.nickname:
+                string += " aka %s" % self.nickname
+            string += " <%s>" % self.email
+        elif self.nickname:
+            string = "%s <%s>" % (self.nickname, self.email)
+        else:
+            string = self.email
+        return string
