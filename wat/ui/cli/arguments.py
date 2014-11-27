@@ -32,7 +32,6 @@ class _NoArgsAction(argparse.Action):
             help=help
         )
 
-
 class _UsageAction(_NoArgsAction):
     def __call__(self, parser, namespace, values, option_string=None):
         parser.print_usage()
