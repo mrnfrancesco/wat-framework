@@ -13,7 +13,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import sys
 
 __all__ = {'parse'}
 
@@ -47,7 +46,14 @@ class _RandomUserAgentAction(argparse.Action):
             setattr(namespace, self.dest, user_agents[randint(0, len(user_agents) - 1)])
 
 
-def parse(arguments=sys.argv[1:]):
+class _UrlAction(argparse.Action):
+    def __call__(self, parser, namespace, value, option_string=None):
+        if value[-1] is not '/':
+            value = "%s/" % value
+        setattr(namespace, self.dest, value)
+
+
+def parse(arguments=None):
     # Initialize the parser object
     parser = argparse.ArgumentParser(
         add_help=False,
@@ -55,17 +61,24 @@ def parse(arguments=sys.argv[1:]):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=_("""
             Examples:
-                - Tell everything possible about "http://demo.opencart.com/", without initial information:
-                    %(prog)s --url http://demo.opencart.com/
+                - Tell everything possible about "http://foo.bar.com/", without initial information:
+                    %(prog)s --url foo.bar.com
 
-                - Load config.txt content as arguments:
-                    %(prog)s @config.txt
+                - Load option.args content as arguments:
+                    %(prog)s @option.args
         """)
     )
 
+    # Framework
+    framework = parser.add_argument_group('Parser')
+    framework.add_argument('-i', '--init', dest="initial_state", nargs=2, metavar=('PROPERTY', 'VALUE'),
+                           help="add PROPERTY=VALUE in the initial state", action="append")
+    framework.add_argument('-g', '--goal', dest="goal_state", metavar="PROPERTY",
+                           help="add PROPERTY in the goal state", action="append")
+
     # Network
     network = parser.add_argument_group('Network')
-    network.add_argument('-u', '--url', required=True, help="the target URL")
+    network.add_argument('-u', '--url', required=True, help="the target URL", action=_UrlAction)
     network.add_argument('-h', '--host', help="use the specified host (in case of virtual hosts)")
     network.add_argument('-p', '--port', help="use the specified port", type=int, default=80)
     # Network > Proxy

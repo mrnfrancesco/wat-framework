@@ -59,10 +59,8 @@ def main():
     # build the planning graph problem
     try:
         rgp = RelaxedGraphPlan(
-            initial_state=[
-                ('website.cms.name', 'opencart')
-            ],
-            # goal_state=['website.cms.opencart.version'],
+            initial_state=options.initial_state,
+            goal_state=options.goal_state,
             fail_on_invalid=True
         )
     except (InvalidTypeError, WatError) as errors:
