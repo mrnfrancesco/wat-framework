@@ -194,8 +194,8 @@ def iswatcomponent(cls):
     return WatComponent in cls.__bases__ and isinstance(cls, MetaComponent)
 
 
-def module_from(path):
-    """Return the dotted notation name of a module from its path.
+def component_from(path):
+    """Return the dotted notation name of a component from its path.
      Note that the returned string is ready to be imported.
     :param path: the absolute path of the module you want to convert
     :return: the module package and name in dotted notation
