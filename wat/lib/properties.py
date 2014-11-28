@@ -53,7 +53,7 @@ class Property(object):
         return "Property('%s')" % self._name
 
     def __eq__(self, other):
-        return isinstance(other, Property) and self._name == other.name
+        return isinstance(other, Property) and self._name == other._name
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -68,8 +68,7 @@ class Property(object):
 class Constraint(Property):
     def __init__(self, name, expected, compare_fn='eq'):
         super(Constraint, self).__init__(name)
-        if expected is not None:
-            self.expected_value = expected
+        self.expected_value = expected
         self.compare_fn = compare_fn
 
     def compare(self):

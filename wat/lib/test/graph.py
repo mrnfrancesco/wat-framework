@@ -98,7 +98,7 @@ class ActionLayerTestCase(unittest.TestCase):
         self.assertSetEqual(set(), RelaxedGraphPlan.ActionLayer().postconditions)
         # one action means its postcondition
         self.assertSetEqual(
-            {Property(self.action.postcondition)},
+            {self.action.postcondition},
             RelaxedGraphPlan.ActionLayer(actions={self.action}).postconditions
         )
 
@@ -107,7 +107,7 @@ class ActionLayerTestCase(unittest.TestCase):
         self.assertSetEqual(set(), RelaxedGraphPlan.ActionLayer().property_layer)
         # one action means its preconditions and its postcondition
         self.assertSetEqual(
-            self.action.preconditions.union({Property(self.action.postcondition)}),
+            self.action.preconditions.union({self.action.postcondition}),
             RelaxedGraphPlan.ActionLayer(actions={self.action}).property_layer
         )
 
