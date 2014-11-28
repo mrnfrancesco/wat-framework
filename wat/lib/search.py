@@ -119,7 +119,7 @@ def properties(containing=None, not_containing=None):
 
     if not_containing is not None:
         properties = filter(
-            lambda prop: not any(search_term in prop for search_term in containing),
+            lambda prop: not any(search_term in prop for search_term in not_containing),
             properties
         )
 
