@@ -24,7 +24,7 @@ from wat.lib.properties import Property, Constraint
     ]
 )
 class GetVersionByFooter(WatComponent):
-    """This module provide the OpenCart exact version by looking at the admin page footer unless it was disabled."""
+    """Provide the OpenCart exact version by looking at the admin page footer unless it was disabled."""
     __metaclass__ = MetaComponent
 
     def __init__(self):

@@ -23,7 +23,7 @@ from wat.lib.shortcuts import hierlogger as logger
     ]
 )
 class GetAdminDirByBruteforce(WatComponent):
-    """This module try to provide the OpenCart admin directory trying some common ones."""
+    """Provide the OpenCart admin directory trying some common ones."""
     __metaclass__ = MetaComponent
 
     def __init__(self):
