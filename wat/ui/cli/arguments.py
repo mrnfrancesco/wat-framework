@@ -86,7 +86,7 @@ class _ShowAllComponentsAction(_NoArgsAction):
 
 def parse(arguments=None):
     # Initialize the parser object
-    parser = argparse.ArgumentParser(add_help=False, fromfile_prefix_chars="@")
+    parser = argparse.ArgumentParser(prog='watf', add_help=False, fromfile_prefix_chars="@")
     # create a subparser object
     subparsers = parser.add_subparsers()
 
