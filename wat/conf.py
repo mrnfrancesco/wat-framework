@@ -115,7 +115,7 @@ class clients(object):
 
     # CONNECTION OPTIONS
     TIMEOUT = 0  # no timeout for the entire request
-    FRESH_CONNECT = True  # same of HEADER = ["Connection: close",]
+    FRESH_CONNECT = False  # same of HEADER = ["Connection: keep-alive",]
     CONNECTTIMEOUT = 30
 
     # SSL and SECURITY OPTIONS
