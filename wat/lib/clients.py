@@ -21,47 +21,56 @@ from wat import conf
 from wat.lib.exceptions import ImproperlyConfigured
 
 
-def __initializedcurl(cls):
-    """
-    Instantiate and initialize the specified pyCurl class
-    with framework default options.
-    :param cls: the pyCurl client class to instantiate
-    :type cls: class
-    :return: an initialized instance of the specified pyCurl class
-    """
-    curl = cls()
-    client_conf = conf.clients.instance()
-    for option in client_conf.__all__:
-        if hasattr(client_conf, option) and hasattr(pycurl, option):
-            try:
-                curl.setopt(getattr(pycurl, option), getattr(client_conf, option))
-            except TypeError as e:
-                raise ImproperlyConfigured(
-                    message=e.message + " (option: '%(option)s')",
-                    params={'option': option}
-                )
-    return curl
+class _CurlClient(object):
+
+    @staticmethod
+    def _initializedcurl(cls):
+        """
+        Instantiate and initialize the specified pyCurl class
+        with framework default options.
+        :param cls: the pyCurl client class to instantiate
+        :type cls: class
+        :return: an initialized instance of the specified pyCurl class
+        """
+        curl = cls()
+        client_conf = conf.clients.instance()
+        for option in client_conf.__all__:
+            if hasattr(client_conf, option) and hasattr(pycurl, option):
+                try:
+                    curl.setopt(getattr(pycurl, option), getattr(client_conf, option))
+                except TypeError as e:
+                    raise ImproperlyConfigured(
+                        message=e.message + " (option: '%(option)s')",
+                        params={'option': option}
+                    )
+        return curl
+
+    def __new__(cls, pycurl_class, *args, **kwargs):
+        return cls._initializedcurl(pycurl_class)
 
 
-def Curl():
-    """Fake wrapper for the `pycurl.Curl` class
+class Curl(_CurlClient):
+    """Wrapper for the `pycurl.Curl` class
     :return: a default initialized instance of `pycurl.Curl` class
     :rtype: pycurl.Curl
     """
-    return __initializedcurl(pycurl.Curl)
+    def __new__(cls, *args, **kwargs):
+        return super(Curl, cls).__new__(cls, pycurl.Curl, args, kwargs)
 
 
-def CurlMulti():
-    """Fake wrapper for the `pycurl.CurlMulti` class
+class CurlMulti(_CurlClient):
+    """Wrapper for the `pycurl.CurlMulti` class
     :return: a default initialized instance of `pycurl.CurlMulti` class
     :rtype: pycurl.CurlMulti
     """
-    return __initializedcurl(pycurl.CurlMulti)
+    def __new__(cls, *args, **kwargs):
+        return super(CurlMulti, cls).__new__(cls, pycurl.CurlMulti)
 
 
-def CurlShare():
-    """Fake wrapper for the `pycurl.CurlShare` class
+class CurlShare(_CurlClient):
+    """Wwrapper for the `pycurl.CurlShare` class
     :return: a default initialized instance of `pycurl.CurlShare` class
     :rtype: pycurl.CurlShare
     """
-    return __initializedcurl(pycurl.CurlShare)
+    def __new__(cls, *args, **kwargs):
+        return super(CurlShare, cls).__new__(cls, pycurl.CurlShare)
