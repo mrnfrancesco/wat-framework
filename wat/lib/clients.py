@@ -22,17 +22,13 @@ from wat.lib.exceptions import ImproperlyConfigured
 
 
 class _CurlClient(object):
-
-    @staticmethod
-    def _initializedcurl(cls):
-        """
-        Instantiate and initialize the specified pyCurl class
-        with framework default options.
-        :param cls: the pyCurl client class to instantiate
-        :type cls: class
+    def __new__(cls, pycurl_class, *args, **kwargs):
+        """Instantiate and initialize the specified pyCurl class with framework default options.
+        :param pycurl_class: the pyCurl client class to instantiate
+        :type pycurl_class: class
         :return: an initialized instance of the specified pyCurl class
         """
-        curl = cls()
+        curl = pycurl_class()
         client_conf = conf.clients.instance()
         for option in client_conf.__all__:
             if hasattr(client_conf, option) and hasattr(pycurl, option):
@@ -44,9 +40,6 @@ class _CurlClient(object):
                         params={'option': option}
                     )
         return curl
-
-    def __new__(cls, pycurl_class, *args, **kwargs):
-        return cls._initializedcurl(pycurl_class)
 
 
 class Curl(_CurlClient):
@@ -64,7 +57,7 @@ class CurlMulti(_CurlClient):
     :rtype: pycurl.CurlMulti
     """
     def __new__(cls, *args, **kwargs):
-        return super(CurlMulti, cls).__new__(cls, pycurl.CurlMulti)
+        return super(CurlMulti, cls).__new__(cls, pycurl.CurlMulti, args, kwargs)
 
 
 class CurlShare(_CurlClient):
@@ -73,4 +66,4 @@ class CurlShare(_CurlClient):
     :rtype: pycurl.CurlShare
     """
     def __new__(cls, *args, **kwargs):
-        return super(CurlShare, cls).__new__(cls, pycurl.CurlShare)
+        return super(CurlShare, cls).__new__(cls, pycurl.CurlShare, args, kwargs)
