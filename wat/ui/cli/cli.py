@@ -65,7 +65,7 @@ def main():
                 print "No keywords specified. Use --all to show all the components"
                 sys.exit()
             properties = search.properties(options.containing, options.not_containing)
-            logger().info("Found %d result(s)" % len(properties))
+            print "Found %d result(s)" % len(properties)
             for index, prop in enumerate(properties, start=1):
                 print "%(no.)d.\t%(property)s" % {
                     'no.': index,

@@ -46,7 +46,7 @@ def config(colored=True, debugging=False, level='info', filename=None):
                 'datefmt': "%H:%M:%S"
             },
             'default': {
-                'format': "[%(levelname)s]\t%(message)s",
+                'format': "[%(levelname)-8s]\t%(message)s",
             }
         },
         'handlers': {

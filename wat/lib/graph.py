@@ -190,8 +190,10 @@ class RelaxedGraphPlan(object):
         else:
             raise InvalidTypeError(initial_state, (list, set, tuple, type(None)))
 
-        if logger().isEnabledFor(logging.DEBUG):
+        if self.initial_state:
             logger().info("Initial state is: %s" % [str(prop) for prop in self.initial_state])
+        else:
+            logger().warning("Initial state is empty")
 
         # Check and register goal state
         if isinstance(goal_state, (list, set, tuple)):
@@ -199,7 +201,7 @@ class RelaxedGraphPlan(object):
             goal_state_errors = list()
             for prop_name in goal_state:
                 if isinstance(prop_name, str):
-                    prop = Property(str(prop_name))
+                    prop = Property(prop_name)
                     if prop.exists():
                         filtered_goal_state.add(prop)
                     else:
@@ -213,8 +215,11 @@ class RelaxedGraphPlan(object):
                     logger().warning(error)
             if filtered_goal_state:
                 self.goal_state = filtered_goal_state
+            elif fail_on_invalid:
+                raise WatError(message='Empty goal state', code='failure')
             else:
-                raise WatError(message='Empty goal state, use None instead', code='failure')
+                self.goal_state = []
+                logger().warning('Resulting goal state is empty')
         elif goal_state is None:
             # It means that you want to see what properties you can
             # achieve with the given properties as initial state
@@ -222,11 +227,10 @@ class RelaxedGraphPlan(object):
         else:
             raise InvalidTypeError(self.goal_state, (list, set, tuple, type(None)))
 
-        if logger().isEnabledFor(logging.DEBUG):
-            if self.goal_state is not None:
-                logger().info("Goal state is: %s" % [str(prop) for prop in self.goal_state])
-            else:
-                logger().info("Undefined goal state, retrieving all possible properties")
+        if self.goal_state:
+            logger().info("Goal state is: %s" % [str(prop) for prop in self.goal_state])
+        elif self.goal_state is None:
+            logger().warning("No goal state specified. Retrieving all possible properties")
 
         self.__uncollected_actions = set(search.components())
         self.__collected_actions = set()  # it collects all the already seen components to avoid loops
@@ -234,7 +238,7 @@ class RelaxedGraphPlan(object):
         self.action_layers = list()
 
         # make the first step to build the first action layer
-        logger().debug("Expanding graph. Calculating action layer '1'")
+        logger().debug("Calculating initial state action layer")
 
         initial_action_layer = RelaxedGraphPlan.ActionLayer()
         for action in self.__uncollected_actions.copy():
@@ -338,7 +342,7 @@ class RelaxedGraphPlan(object):
                                     _logger.debug("Executing component '%s'" % component)
                                     component().execute()
                                 except (InvalidComponentError, ComponentFailure) as error:
-                                    _logger.error("%(component)s: %(message)s" % {
+                                    _logger.warning("%(component)s: %(message)s" % {
                                         'component': component,
                                         'message': error.messages
                                     })
@@ -352,7 +356,7 @@ class RelaxedGraphPlan(object):
                                     break
                         if prop not in registry:
                             _logger.error(PropertyNotAchievedError(prop))
-                _logger.info("Execution completed succesfully")
+                _logger.info("Execution completed")
 
         while True:
             # Termination is granted by fixed-point level.
@@ -360,7 +364,7 @@ class RelaxedGraphPlan(object):
             # level i of G is identical to level k.
             goal_reached = self.__goal_reached()
             if goal_reached:
-                logger().info("Goal is reachable")
+                logger().info("Goal is reachable!")
                 return LayeredPlan(self)
             else:
                 if self.__solution_possible():
@@ -370,8 +374,8 @@ class RelaxedGraphPlan(object):
                     # was specified, so the solution is all the graph
                     # when fixed-point layer is reached
                     if goal_reached is None:
-                        logger().info("Solution set as all reachable properties")
+                        logger().info("Setting all retrievable properties as solution")
                         return LayeredPlan(self)  # return all as solution
                     else:  # fixed-point level was reached, but goal state was not
-                        logger().info("No solution found")
+                        logger().warning("No solution found")
                         return None
