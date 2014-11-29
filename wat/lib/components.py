@@ -34,7 +34,7 @@ def info(authors, released, updated, preconditions=None, version='unknown'):
         if all(isinstance(author, Author) for author in authors):
             cls.authors = authors
         else:
-            raise InvalidTypeError('authors', Author)
+            raise InvalidTypeError(authors, Author)
         if isinstance(released, date):
             cls.released = released
         if isinstance(updated, date):
@@ -44,7 +44,7 @@ def info(authors, released, updated, preconditions=None, version='unknown'):
         elif all(isinstance(spec, (Property, Constraint)) for spec in preconditions):
             cls.preconditions = set(preconditions)
         else:
-            raise InvalidTypeError('preconditions', Property)
+            raise InvalidTypeError(preconditions, Property)
         # save the version as string, whatever type it really is
         cls.version = str(version)
 

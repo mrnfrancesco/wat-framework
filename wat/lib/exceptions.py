@@ -200,7 +200,7 @@ class ConstraintViolationError(PropertyError, AssertionError):
         """
         super(ConstraintViolationError, self).__init__(
             message="Constraint was violated for property '%(prop)s' (expected %(fn)s: '%(expected)s')",
-            params={'prop': constraint.name, 'fn': constraint.compare_fn, 'expected': constraint.expected_value},
+            params={'prop': constraint._name, 'fn': constraint.compare_fn, 'expected': constraint.expected_value},
             code='violation'
         )
 
