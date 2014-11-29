@@ -21,7 +21,6 @@ from wat.lib.exceptions import InvalidTypeError, WatError, ClientError
 from wat.lib.graph import RelaxedGraphPlan
 from wat.lib.properties import Property, Registry
 from wat.lib.shortcuts import hierlogger as logger
-
 from arguments import parse as parse_arguments
 from log import config as logging_config
 
@@ -46,6 +45,7 @@ def main():
 
     if hasattr(options, 'search'):
         from wat.lib import search
+
         if options.search == 'components':
             if options.postcondition is None and options.preconditions is None:
                 print "No postcondition and/or preconditions specified. Use --all to show all the components"
@@ -77,6 +77,8 @@ def main():
     clients_conf.URL = options.url
     clients_conf.PORT = options.port
     clients_conf.FOLLOWLOCATION = options.followlocation
+    if options.host is not None:
+        clients_conf.HTTPHEADER.append("Host: %s" % options.host)
     if options.proxy is not None:
         clients_conf.PROXY = options.proxy
 
@@ -112,13 +114,17 @@ def main():
     # if no goal was specified show all retrieved properties
     else:
         results = Registry.instance()
+    # remove initial state properties from results
+    initial_properties = [prop_value[0] for prop_value in options.initial_state]
+    results = {prop: value for prop, value in results.iteritems() if prop not in initial_properties}
     # print the results
     if results:
-        print
-        print "Retrieved properties:"
+        print "\nRetrieved properties:"
         for index, prop_value in enumerate(results.iteritems(), start=1):
             prop, value = prop_value
             print "\t%d.\t%s:\t%s" % (index, prop, str(value))
+    else:
+        print "\nNo property retrieved"
 
 
 if __name__ == '__main__':
