@@ -238,7 +238,7 @@ class RelaxedGraphPlan(object):
 
         initial_action_layer = RelaxedGraphPlan.ActionLayer()
         for action in self.__uncollected_actions.copy():
-            action_preconditions = set(action.preconditions)
+            action_preconditions = {Property(str(precondition)) for precondition in action.preconditions}
             if not action_preconditions or action_preconditions.issubset(self.initial_state):
                 self.__uncollected_actions.remove(action)
                 self.__collected_actions.add(action)
