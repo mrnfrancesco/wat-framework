@@ -35,9 +35,9 @@ class GetAdminDirByDefault(WatComponent):
     def run(self):
         self.curl.perform()
         http_code = self.curl.getinfo(HTTP_CODE)
-        if http_code is 200:
+        if http_code == 200:
             return 'admin/'
-        elif http_code is 404:
+        elif http_code == 404:
             raise ComponentFailure('Admin directory name is not the default one')
         else:
-            raise ComponentFailure("Server response HTTP status code was '%d', 200 or 404 expected" % http_code)
+            raise ComponentFailure("Server response HTTP status code was %d, 200 or 404 expected" % http_code)

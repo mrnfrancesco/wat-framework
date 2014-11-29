@@ -41,10 +41,12 @@ class GetAdminDirByBruteforce(WatComponent):
             self.curl.setopt(URL, urljoin(conf.clients.instance().URL, 'admin/'))
             self.curl.perform()
             http_code = self.curl.getinfo(HTTP_CODE)
-            if http_code is 200:
+            if http_code == 200:
                 return admin_dir
             elif debug_enabled:
-                if http_code is 404:
+                if http_code == 404:
                     logger().debug("Admin directory name is not '%s'" % admin_dir)
                 else:
-                    logger().debug("Server response HTTP status code was '%d', 200 or 404 expected" % http_code)
+                    logger().debug("Server response HTTP status code was %d, 200 or 404 expected" % http_code)
+
+        raise ComponentFailure(message="Cannot determine admin directory name")
