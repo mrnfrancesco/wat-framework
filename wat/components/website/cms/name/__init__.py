@@ -1,4 +1,4 @@
-__modules__ = ['bruteforce']
+__modules__ = ['check']
 
 
 __all__ = ['__names__']
