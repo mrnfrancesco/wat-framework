@@ -115,8 +115,9 @@ def main():
     else:
         results = Registry.instance()
     # remove initial state properties from results
-    initial_properties = [prop_value[0] for prop_value in options.initial_state]
-    results = {prop: value for prop, value in results.iteritems() if prop not in initial_properties}
+    if options.initial_state:
+        initial_properties = [prop_value[0] for prop_value in options.initial_state]
+        results = {prop: value for prop, value in results.iteritems() if prop not in initial_properties}
     # print the results
     if results:
         print "\nRetrieved properties:"
