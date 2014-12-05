@@ -167,6 +167,8 @@ class RelaxedGraphPlan(object):
         """
         # Check and register initial state
 
+        _logger = logger(depth=2)
+
         filtered_initial_state = set()
         if isinstance(initial_state, (list, set, tuple)):
             if all(len(prop_value) == 2 for prop_value in initial_state):
@@ -181,7 +183,7 @@ class RelaxedGraphPlan(object):
                     raise WatError(initial_state_errors)
                 elif initial_state_errors:
                     for error in initial_state_errors:
-                        logger().warning(error)
+                        _logger.warning(error)
                 self.initial_state = filtered_initial_state
             else:
                 raise WatError(message=TypeError('Only pair tuple accepted'), code='invalid')
@@ -191,9 +193,9 @@ class RelaxedGraphPlan(object):
             raise InvalidTypeError(initial_state, (list, set, tuple, type(None)))
 
         if self.initial_state:
-            logger().info("Initial state is: %s" % [str(prop) for prop in self.initial_state])
+            _logger.info("Initial state is: %s" % [str(prop) for prop in self.initial_state])
         else:
-            logger().warning("Initial state is empty")
+            _logger.warning("Initial state is empty")
 
         # Check and register goal state
         if isinstance(goal_state, (list, set, tuple)):
@@ -212,14 +214,14 @@ class RelaxedGraphPlan(object):
                 raise WatError(message=goal_state_errors, code='invalid')
             elif goal_state_errors:
                 for error in goal_state_errors:
-                    logger().warning(error)
+                    _logger.warning(error)
             if filtered_goal_state:
                 self.goal_state = filtered_goal_state
             elif fail_on_invalid:
                 raise WatError(message='Empty goal state', code='failure')
             else:
                 self.goal_state = []
-                logger().warning('Resulting goal state is empty')
+                _logger.warning('Resulting goal state is empty')
         elif goal_state is None:
             # It means that you want to see what properties you can
             # achieve with the given properties as initial state
@@ -228,9 +230,9 @@ class RelaxedGraphPlan(object):
             raise InvalidTypeError(self.goal_state, (list, set, tuple, type(None)))
 
         if self.goal_state:
-            logger().info("Goal state is: %s" % [str(prop) for prop in self.goal_state])
+            _logger.info("Goal state is: %s" % [str(prop) for prop in self.goal_state])
         elif self.goal_state is None:
-            logger().warning("No goal state specified. Retrieving all possible properties")
+            _logger.warning("No goal state specified. Retrieving all possible properties")
 
         self.__uncollected_actions = set(search.components())
         self.__collected_actions = set()  # it collects all the already seen components to avoid loops
@@ -238,7 +240,7 @@ class RelaxedGraphPlan(object):
         self.action_layers = list()
 
         # make the first step to build the first action layer
-        logger().debug("Calculating initial state action layer")
+        _logger.debug("Calculating initial state action layer")
 
         initial_action_layer = RelaxedGraphPlan.ActionLayer()
         for action in self.__uncollected_actions.copy():
@@ -253,8 +255,7 @@ class RelaxedGraphPlan(object):
         """Make a step forward in the process of building the planning graph, making true that:
             * a in Ax => a not in Ay, for any y > x
         """
-        if logger().isEnabledFor(logging.DEBUG):
-            logger().debug("Expanding graph. Calculating action layer '%d'" % (len(self.action_layers) + 1))
+        logger(depth=2).debug("Expanding graph. Calculating action layer '%d'" % (len(self.action_layers) + 1))
 
         last_action_layer = self.action_layers[-1]
         next_action_layer = self.ActionLayer(
