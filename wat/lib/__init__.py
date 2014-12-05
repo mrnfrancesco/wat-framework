@@ -12,3 +12,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import sys
+import traceback
+from os.path import join
+from datetime import datetime
+
+from wat import dirs
+from wat.lib.shortcuts import hierlogger as logger
+
+
+def excepthook(exc_type, exc_message, exc_traceback):
+    logger(depth=1).critical(
+        "Unhandled '%(exc_type)s' was raised: %(exc_message)s" % {
+            'exc_type': exc_type.__name__,
+            'exc_message': exc_message
+        }
+    )
+
+    try:
+        with open(join(dirs.install, 'errors.log'), mode='a') as f:
+            f.write('-' * 30 + str(datetime.now()) + '-' * 30 + '\n')
+            traceback.print_exception(exc_type, exc_message, exc_traceback, file=f)
+    except IOError:
+        pass
+
+
+sys.excepthook = excepthook
