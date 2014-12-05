@@ -91,7 +91,7 @@ def main():
         )
     except (InvalidTypeError, WatError) as errors:
         for error in errors:
-            logger().critical(error)
+            logger(depth=1).critical(error)
         sys.exit(1)
 
     solution = rgp.solution
@@ -102,7 +102,7 @@ def main():
         solution.execute()
     except ClientError as error:
         for message in error.messages:
-            logger().critical(message)
+            logger(depth=1).critical(message)
         sys.exit()
 
     # if goal was specified show only goal state properties
