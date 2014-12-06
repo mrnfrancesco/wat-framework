@@ -16,8 +16,8 @@ from wat.lib.shortcuts import hierlogger as logger
         Author(email="francesco.mrn24@gmail.com", name="Francesco Marano", nickname="mrnfrancesco"),
     ],
     released=date(2014, 11, 21),
-    updated=date(2014, 11, 21),
-    version='0.0.1',
+    updated=date(2014, 12, 06),
+    version='0.0.2',
     preconditions=[
         Constraint("website.cms.name", "opencart", 'eq'),
     ]
@@ -41,7 +41,7 @@ class GetAdminDirByBruteforce(WatComponent):
             self.curl.setopt(URL, urljoin(conf.clients.instance().URL, 'admin/'))
             self.curl.perform()
             http_code = self.curl.getinfo(HTTP_CODE)
-            if http_code == 200:
+            if http_code in (200, 401):
                 return admin_dir
             elif debug_enabled:
                 if http_code == 404:

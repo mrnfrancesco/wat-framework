@@ -14,8 +14,8 @@ from wat.lib.properties import Constraint
         Author(email="francesco.mrn24@gmail.com", name="Francesco Marano", nickname="mrnfrancesco"),
     ],
     released=date(2014, 11, 15),
-    updated=date(2014, 11, 15),
-    version='0.0.1',
+    updated=date(2014, 12, 06),
+    version='0.0.2',
     preconditions=[
         Constraint("website.cms.name", "opencart", 'eq'),
     ]
@@ -35,7 +35,7 @@ class GetAdminDirByDefault(WatComponent):
     def run(self):
         self.curl.perform()
         http_code = self.curl.getinfo(HTTP_CODE)
-        if http_code == 200:
+        if http_code in (200, 401):
             return 'admin/'
         elif http_code == 404:
             raise ComponentFailure('Admin directory name is not the default one')
