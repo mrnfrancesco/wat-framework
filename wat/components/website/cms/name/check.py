@@ -1,5 +1,5 @@
 from datetime import date
-from pycurl import URL, WRITEFUNCTION, HTTP_CODE
+from pycurl import URL, NOBODY, HTTP_CODE
 
 from wat import conf
 from wat.lib import clients
@@ -13,8 +13,8 @@ from wat.lib.models import Author
         Author(email="francesco.mrn24@gmail.com", name="Francesco Marano", nickname="mrnfrancesco"),
     ],
     released=date(2014, 12, 01),
-    updated=date(2014, 12, 01),
-    version='0.0.1',
+    updated=date(2014, 12, 06),
+    version='0.0.2',
     preconditions=None
 )
 class CheckCmsNameAsOpencart(WatComponent):
@@ -26,7 +26,7 @@ class CheckCmsNameAsOpencart(WatComponent):
         from urlparse import urljoin
 
         self.curl = clients.Curl()
-        self.curl.setopt(WRITEFUNCTION, self.save_as_attribute('_'))
+        self.curl.setopt(NOBODY, True)
         self.curl.setopt(URL, urljoin(conf.clients.instance().URL, 'catalog/controller/product/product.php'))
 
     def run(self):
