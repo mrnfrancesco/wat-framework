@@ -14,7 +14,7 @@ from wat.lib.models import Author
     ],
     released=date(2014, 12, 06),
     updated=date(2014, 12, 06),
-    version='0.0.1',
+    version='0.0.2',
     preconditions=None
 )
 class ServerNameByResponseHeader(WatComponent):
@@ -37,5 +37,5 @@ class ServerNameByResponseHeader(WatComponent):
             if m is not None:
                 server_name = m.group('server_name').strip()
                 if server_name:
-                    return server_name
+                    return server_name.lower()
         raise ComponentFailure("No 'server' header provided.")
