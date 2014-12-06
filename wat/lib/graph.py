@@ -293,37 +293,51 @@ class RelaxedGraphPlan(object):
         class LayeredPlan(object):
 
             def __init__(self, planning_graph):
-                # copy the goal state as property name list
-                if planning_graph.goal_state is not None:
-                    self.__goal_state = [str(prop) for prop in planning_graph.goal_state]
-                else:
-                    self.__goal_state = None
                 # build the action layers which represent the solution
                 self.action_layers = list()
-                # copy backwards the graph structure
-                for action_layer in planning_graph.action_layers[::-1]:
-                    if self.action_layers:  # mantain the actions which need for these properties
-                        precondition_needed = self.action_layers[-1].preconditions
-                    elif planning_graph.goal_state:  # if first step take them from specified goal state if any
-                        precondition_needed = planning_graph.goal_state
-                    else:
-                        # if no goal was specified mantain all actions as side-effect of
-                        # choosing as needed all the precondition in the last action layer
-                        precondition_needed = planning_graph.action_layers[-1].preconditions
-                    # clean up all the unused actions (those with useless postcondition)
-                    for action in action_layer.actions.copy():
-                        if action.postcondition not in precondition_needed:
-                            action_layer.remove(action)
-                    # remove all the NoOpAction and check if some action remain
-                    action_layer = RelaxedGraphPlan.ActionLayer(
-                        actions=[
-                            action for action in action_layer.actions
-                            if not isinstance(action, RelaxedGraphPlan.ActionLayer.NoOpAction)
-                        ]
-                    )
-                    if len(action_layer):
-                        # copy the remaining action layer at the beginning of the layered plan
-                        self.action_layers.insert(0, action_layer)
+                # if there is a specified goal state, remove all the useless components
+                # in the action layers
+                if planning_graph.goal_state is not None:
+                    # copy the goal state as property name list
+                    self.__goal_state = [str(prop) for prop in planning_graph.goal_state]
+                    # copy backwards the graph structure
+                    for action_layer in planning_graph.action_layers[::-1]:
+                        if self.action_layers:  # mantain the actions which need for these properties
+                            precondition_needed = self.action_layers[-1].preconditions
+                        elif planning_graph.goal_state:  # if first step take them from specified goal state if any
+                            precondition_needed = planning_graph.goal_state
+                        else:
+                            # if no goal was specified mantain all actions as side-effect of
+                            # choosing as needed all the precondition in the last action layer
+                            precondition_needed = planning_graph.action_layers[-1].preconditions
+                        # clean up all the unused actions (those with useless postcondition)
+                        for action in action_layer.actions.copy():
+                            if action.postcondition not in precondition_needed:
+                                action_layer.remove(action)
+                        # remove all the NoOpAction and check if some action remain
+                        action_layer = RelaxedGraphPlan.ActionLayer(
+                            actions=[
+                                action for action in action_layer.actions
+                                if not isinstance(action, RelaxedGraphPlan.ActionLayer.NoOpAction)
+                            ]
+                        )
+                        if len(action_layer):
+                            # copy the remaining action layer at the beginning of the layered plan
+                            self.action_layers.insert(0, action_layer)
+                # if there is NOT a specified goal state, remove just the NoOpAction pseudo-components
+                # in the action layers
+                else:
+                    self.__goal_state = None
+                    for action_layer in planning_graph.action_layers[::-1]:
+                        action_layer = RelaxedGraphPlan.ActionLayer(
+                            actions=[
+                                action for action in action_layer.actions
+                                if not isinstance(action, RelaxedGraphPlan.ActionLayer.NoOpAction)
+                            ]
+                        )
+                        if len(action_layer):
+                            # copy the remaining action layer at the beginning of the layered plan
+                            self.action_layers.insert(0, action_layer)
 
             def execute(self):
                 _logger = logger()
