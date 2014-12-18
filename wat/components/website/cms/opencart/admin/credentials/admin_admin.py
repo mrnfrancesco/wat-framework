@@ -1,5 +1,5 @@
 from datetime import date
-from pycurl import URL, NOBODY, HTTP_CODE, HTTPPOST, EFFECTIVE_URL, FOLLOWLOCATION
+from pycurl import URL, HTTP_CODE, HTTPPOST, EFFECTIVE_URL, FOLLOWLOCATION, WRITEFUNCTION
 from wat import conf
 from wat.lib import clients
 
@@ -15,7 +15,7 @@ from wat.lib.properties import Constraint, Property
     ],
     released=date(2014, 12, 18),
     updated=date(2014, 12, 18),
-    version='0.0.1',
+    version='0.0.3',
     preconditions=[
         Constraint("website.cms.name", "opencart", 'eq'),
         Property("website.cms.opencart.admin.directory")
@@ -30,7 +30,7 @@ class CheckAdminAdminPair(WatComponent):
         from urlparse import urljoin
 
         self.curl = clients.Curl()
-        self.curl.setopt(NOBODY, True)
+        self.curl.setopt(WRITEFUNCTION, self.save_as_attribute('_'))
         self.curl.setopt(FOLLOWLOCATION, True)
         self.url = urljoin(
             conf.clients.instance().URL,
@@ -39,8 +39,7 @@ class CheckAdminAdminPair(WatComponent):
         self.curl.setopt(URL, self.url)
         self.curl.setopt(HTTPPOST, [
             ('username', 'admin'),
-            ('password', 'admin'),
-            ('redirect', self.url)
+            ('password', 'admin')
         ])
 
     def run(self):
