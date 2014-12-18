@@ -1,6 +1,6 @@
 from datetime import date
 import logging
-from pycurl import URL, WRITEFUNCTION, HTTP_CODE
+from pycurl import URL, NOBODY, HTTP_CODE
 
 from wat import conf
 from wat.lib import clients
@@ -16,8 +16,8 @@ from wat.lib.shortcuts import hierlogger as logger
         Author(email="francesco.mrn24@gmail.com", name="Francesco Marano", nickname="mrnfrancesco"),
     ],
     released=date(2014, 11, 21),
-    updated=date(2014, 12, 06),
-    version='0.0.2',
+    updated=date(2014, 12, 18),
+    version='0.0.3',
     preconditions=[
         Constraint("website.cms.name", "opencart", 'eq'),
     ]
@@ -30,7 +30,7 @@ class GetAdminDirByBruteforce(WatComponent):
         super(GetAdminDirByBruteforce, self).__init__()
 
         self.curl = clients.Curl()
-        self.curl.setopt(WRITEFUNCTION, self.save_as_attribute('_'))
+        self.curl.setopt(NOBODY, True)
         self.admin_dirs = ['admin/', 'administrator/', 'administration/', 'sysadmin/']
 
     def run(self):

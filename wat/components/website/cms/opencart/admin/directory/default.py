@@ -1,5 +1,5 @@
 from datetime import date
-from pycurl import URL, WRITEFUNCTION, HTTP_CODE
+from pycurl import URL, NOBODY, HTTP_CODE
 from wat import conf
 from wat.lib import clients
 
@@ -14,8 +14,8 @@ from wat.lib.properties import Constraint
         Author(email="francesco.mrn24@gmail.com", name="Francesco Marano", nickname="mrnfrancesco"),
     ],
     released=date(2014, 11, 15),
-    updated=date(2014, 12, 06),
-    version='0.0.2',
+    updated=date(2014, 12, 18),
+    version='0.0.3',
     preconditions=[
         Constraint("website.cms.name", "opencart", 'eq'),
     ]
@@ -29,7 +29,7 @@ class GetAdminDirByDefault(WatComponent):
         from urlparse import urljoin
 
         self.curl = clients.Curl()
-        self.curl.setopt(WRITEFUNCTION, self.save_as_attribute('_'))
+        self.curl.setopt(NOBODY, True)
         self.curl.setopt(URL, urljoin(conf.clients.instance().URL, 'admin/'))
 
     def run(self):
