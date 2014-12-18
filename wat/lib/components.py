@@ -105,6 +105,9 @@ class WatComponent(object):
         except pycurl.error as e:
             raise ClientError(pycurl_error=e)
 
+        if provided is None:
+            raise ComponentFailure("Component has returned no value")
+
         module = importlib.import_module('.'.join([wat.packages.components, str(self.postcondition)]))
         if hasattr(module, '__provides__'):  # if more values should be provided
             provides = module.__provides__
