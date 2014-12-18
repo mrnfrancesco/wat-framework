@@ -7,7 +7,7 @@ from wat.lib import clients
 from wat.lib.components import *
 from wat.lib.exceptions import ComponentFailure
 from wat.lib.models import Author
-from wat.components.website.cms.opencart.version import *
+from wat.components.website.cms.opencart.version import __versions__, __last_version__
 from wat.lib.properties import Property, Constraint
 
 
