@@ -105,8 +105,9 @@ class WatComponent(object):
         except pycurl.error as e:
             raise ClientError(pycurl_error=e)
 
-        if hasattr(self, '__provides__'):  # if more values should be provided
-            provides = __import__('.'.join([wat.packages.components, str(self.postcondition)])).__provides__
+        module = importlib.import_module('.'.join([wat.packages.components, str(self.postcondition)]))
+        if hasattr(module, '__provides__'):  # if more values should be provided
+            provides = module.__provides__
             if isinstance(provided, dict):  # provided postconditions must be a dict consistent with __provides__
 
                 if set(provided.keys()).isdisjoint(provides):
