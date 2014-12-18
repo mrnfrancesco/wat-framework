@@ -21,7 +21,7 @@ from pkgutil import walk_packages, os
 
 import wat
 from wat.lib.components import iswatcomponent, component_from
-from wat.lib.exceptions import PropertyDoesNotExist, InvalidTypeError
+from wat.lib.exceptions import InvalidTypeError
 
 
 def __submoduleof(module):
@@ -49,41 +49,30 @@ def __components():
     return components
 
 
-def components(postcondition=None, preconditions=None):
+def components(postconditions=None, preconditions=None):
+    components = __components()
     # no filters means all components
-    if postcondition is None and preconditions is None:
-        return __components()
+    if postconditions is None and preconditions is None:
+        return components
     else:
-        if postcondition is not None:
-            if not isinstance(postcondition, str):
-                raise InvalidTypeError(postcondition, (str,))
+        if postconditions is not None:
+            if not isinstance(postconditions, (list, set, tuple)):
+                raise InvalidTypeError(postconditions, (list, set, tuple))
         if preconditions is not None:
             if not isinstance(preconditions, (list, set, tuple)):
                 raise InvalidTypeError(preconditions, (list, set, tuple))
             elif isinstance(preconditions, (list, tuple)):
                 preconditions = set(preconditions)
 
-    components = list()
-    if postcondition is not None:
-        # take all the components which give the specified postcondition
-        try:
-            module = importlib.import_module('.'.join([wat.packages.components, postcondition]))
-            if hasattr(module, '__modules__') and module.__modules__:
-                for submodule_name in __submoduleof(module):
-                    try:
-                        submodule = importlib.import_module(submodule_name)
-                        components.extend([cls for cls in __componentsin(submodule)])
-                    except ImportError:
-                        continue
-        except ImportError:
-            raise PropertyDoesNotExist(postcondition)
+    if postconditions is not None:
+        # take all the components which give the specified postconditions
+        components = filter(
+            lambda component: str(component.postcondition) in postconditions,
+            components
+        )
 
     if preconditions is not None:
-        # if we have no postcondition filter, get all the components
-        # then filter by preconditions, otherwise filter them only
-        if postcondition is None:
-            components = __components()
-
+        # take all the components which require at least one of the specified precondition
         components = filter(
             lambda component: not set(str(dep) for dep in component.preconditions).isdisjoint(preconditions),
             components

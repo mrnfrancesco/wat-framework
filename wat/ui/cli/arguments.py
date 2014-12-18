@@ -117,8 +117,8 @@ def parse(arguments=None):
     search_components_parser = search_subparsers.add_parser('components', add_help=False, help="search for components")
     search_components_parser.add_argument('-a', '--all', action=_ShowAllComponentsAction,
                                          help="show all the components and exit")
-    search_components_parser.add_argument('-post', '--postcondition', metavar="PROPERTY",
-                                         help="the property all the components must have as postcondition")
+    search_components_parser.add_argument('-post', '--postcondition', metavar="PROPERTY", nargs="+",
+                                         help="the properties all the components must have as postcondition")
     search_components_parser.add_argument('-pre', '--preconditions', metavar="PROPERTY", nargs="+",
                                          help="the properties all the components must have as preconditions")
     search_components_parser.add_argument('--help', help="show this help message and exit", action="help")
@@ -167,7 +167,6 @@ def parse(arguments=None):
                        help="no proxy, environmental one will be ignored")
     # Run > Network > Proxy > Custom Proxy
     # TODO: add proxy username and password support
-    # FIXME: check proxy help for real supported protocol
     proxy.add_argument('--proxy', metavar="SCHEME://(HOSTNAME|IP):PORT", dest="proxy",
                        help="supply a proxy. HTTP, SOCKS4 SOCKS4A and SOCKS5 are supported.")
     # Run > Network > User-Agent
