@@ -57,9 +57,7 @@ class MetaComponent(type):
     def __init__(cls, name, bases, attr):
         super(MetaComponent, cls).__init__(name, bases, attr)
         cls.name = name
-        if cls.__doc__:
-            cls.description = cls.__doc__
-        else:
+        if not cls.__doc__:
             raise InvalidComponentError("missing component description")
 
         # A little hack to add provided property available to every module class
@@ -68,6 +66,10 @@ class MetaComponent(type):
         filename = filename.replace(wat.dirs.components, '')
         filename = filename.rpartition(os.path.sep)[0]
         cls.postcondition = Property(filename.replace(os.path.sep, '.')[1:])
+
+    @property
+    def description(cls):
+        return cls.__doc__
 
     def __str__(self):
         return '.'.join([str(self.postcondition), self.name])
