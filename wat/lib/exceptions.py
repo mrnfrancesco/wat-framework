@@ -15,11 +15,11 @@
 
 __all__ = {
     # generic
-    'WatError', 'ComponentError', 'PropertyError'
+    'WatError', 'ComponentError', 'PropertyError',
     # error
-    'ClientError'
+    'ClientError',
     # failure
-    'ComponentFailure', 'PropertyNotAchievedError'
+    'ComponentFailure', 'PropertyNotAchievedError',
     # missing
     'PropertyDoesNotExist',
     # misconfigured
@@ -27,7 +27,7 @@ __all__ = {
     # invalid
     'InvalidTypeError', 'InvalidComponentError',
     # violation
-    'ConstraintViolationError',
+    'ConstraintViolationError'
 }
 
 from functools import reduce
@@ -206,7 +206,7 @@ class ConstraintViolationError(PropertyError, AssertionError):
 
 
 class ComponentFailure(ComponentError):
-    """The module failed during execution"""
+    """The component failed during execution"""
 
     def __init__(self, message, params=None):
         super(ComponentFailure, self).__init__(message, params, code='failure')
