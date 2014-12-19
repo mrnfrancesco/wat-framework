@@ -68,7 +68,7 @@ class WatError(Exception):
         The `message` argument can be a single error, a list of errors, or a
         dictionary that maps field names to lists of errors. What we define as
         an "error" can be either a simple string or an instance of
-        ValidationError with its message attribute set, and what we define as
+        WatError with its message attribute set, and what we define as
         list or dictionary can be an actual `list` or `dict` or an instance
         of WatError with its `error_list` or `error_dict` attribute set.
         """
