@@ -100,6 +100,9 @@ def parse(arguments=None):
                         help="set output format to a more verbose one, for debugging purpose (default: %(default)s)")
     output.add_argument('-l', '--level', help="set output verbosity (default: %(default)s)",
                         choices=['debug', 'info', 'warning', 'error', 'critical'], default='info')
+    output.add_argument('-log', '--log-file', default=None, metavar='FILENAME', dest='logfile',
+                        help="output log information into specified file")
+
     # Output > Color
     color = output.add_mutually_exclusive_group(required=False)
     color.add_argument('-c', '--color', dest="colored", help="use color in the output", action="store_true",

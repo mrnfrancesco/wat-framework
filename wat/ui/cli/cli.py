@@ -41,7 +41,12 @@ def banner():
 def main():
     print banner()
     options = parse_arguments()
-    logging_config(colored=options.colored, debugging=options.debugging, level=options.level)
+    logging_config(
+        colored=options.colored,
+        debugging=options.debugging,
+        level=options.level,
+        filename=options.logfile
+    )
 
     if hasattr(options, 'search'):
         from wat.lib import search
