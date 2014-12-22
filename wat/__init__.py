@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = ['project', 'author', 'dirs', 'files', 'packages']
+__all__ = ['project', 'author', 'dirs', 'files', 'docs', 'packages']
 
 from os.path import join, dirname
 
