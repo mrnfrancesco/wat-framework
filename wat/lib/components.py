@@ -153,7 +153,7 @@ class WatComponent(object):
          - set,   `WatComponent.register({(prop, value),})`
 
         :param prop_value: all the <property,value> pairs to register
-        :type prop_value: dict|list[tuple]|set[tuple]|tuple[tuple]
+        :type prop_value: dict|list[tuple]|set[tuple]
         :raise InvalidTypeError: if the pairs to register are not in a dict, list or set
         """
         registry = Registry.instance()
