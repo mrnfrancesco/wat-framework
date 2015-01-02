@@ -82,6 +82,8 @@ def main():
     clients_conf.URL = options.url
     clients_conf.PORT = options.port
     clients_conf.FOLLOWLOCATION = options.followlocation
+    if options.user_agent is not None:
+        clients_conf.USERAGENT = options.user_agent
     if options.host is not None:
         clients_conf.HTTPHEADER.append("Host: %s" % options.host)
     if options.proxy is not None:
