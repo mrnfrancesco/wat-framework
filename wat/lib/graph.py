@@ -303,7 +303,7 @@ class RelaxedGraphPlan(object):
                     # copy backwards the graph structure
                     for action_layer in planning_graph.action_layers[::-1]:
                         if self.action_layers:  # mantain the actions which need for these properties
-                            precondition_needed = self.action_layers[-1].preconditions
+                            precondition_needed = self.action_layers[0].preconditions
                         elif planning_graph.goal_state:  # if first step take them from specified goal state if any
                             precondition_needed = planning_graph.goal_state
                         else:
