@@ -140,7 +140,13 @@ class WatComponent(object):
     @staticmethod
     def precondition(prop):
         registry = Registry.instance()
-        return registry[prop] if prop in registry else None
+        if prop in registry:
+            if hasattr(registry[prop], 'copy'):
+                return registry[prop].copy()
+            else:
+                return registry[prop]
+        else:
+            return None
 
     @staticmethod
     def register(prop_value):
