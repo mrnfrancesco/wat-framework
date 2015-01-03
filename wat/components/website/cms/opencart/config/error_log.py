@@ -1,6 +1,6 @@
 import re
 from datetime import date
-from pycurl import URL, HTTP_CODE, WRITEFUNCTION, COOKIE, HTTPPOST, POSTFIELDS
+from pycurl import URL, HTTP_CODE, WRITEFUNCTION, COOKIE, POSTFIELDS
 from urlparse import urljoin
 
 from wat import conf
@@ -16,9 +16,9 @@ from wat.lib.properties import Property, Constraint
     authors=[
         Author(email="francesco.mrn24@gmail.com", name="Francesco Marano", nickname="mrnfrancesco"),
     ],
-    released=date(2015, 01, 02),
-    updated=date(2015, 01, 02),
-    version='0.0.1',
+    released=date(2015, 01, 03),
+    updated=date(2015, 01, 03),
+    version='0.9.1',
     preconditions=[
         Constraint("website.cms.name", 'opencart', 'eq'),
         Property("website.cms.opencart.admin.directory"),
