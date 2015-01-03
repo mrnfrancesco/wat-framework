@@ -43,7 +43,7 @@ class _RandomUserAgentAction(argparse.Action):
             from random import randint
 
             user_agents = f.readlines()
-            setattr(namespace, self.dest, user_agents[randint(0, len(user_agents) - 1)])
+            setattr(namespace, self.dest, user_agents[randint(0, len(user_agents) - 1)].replace('\n', ''))
 
 
 class _UrlAction(argparse.Action):
