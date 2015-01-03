@@ -184,7 +184,10 @@ class WatComponent(object):
             """Create an attribute with the specified name and value into the component
             :param value: the value to give to the attribute
             """
-            self.__setattr__(name, value)
+            if not hasattr(self, name):
+                self.__setattr__(name, value)
+            else:
+                self.__setattr__(name, self.__getattribute__(name) + value)
 
         return set_attr
 
