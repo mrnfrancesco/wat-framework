@@ -66,7 +66,7 @@ class GetConfigParameters(WatComponent):
         self.curl.setopt(URL, url)
         self.curl.perform()
         http_code = self.curl.getinfo(HTTP_CODE)
-        print self.change_log_file()
+        self.change_log_file()
         if http_code == 200:
             if not self.body:
                 raise ComponentFailure('Server sent an empty response')
