@@ -130,7 +130,12 @@ def main():
         print "\nRetrieved properties:"
         for index, prop_value in enumerate(results.iteritems(), start=1):
             prop, value = prop_value
-            print "\t%d.\t%s:\t%s" % (index, prop, str(value))
+            if isinstance(value, dict):
+                print "%d.\t%s:" % (index, prop)
+                for _, key_val in enumerate(value.iteritems()):
+                    print "\t\t%s\t=>\t%s" % key_val
+            else:
+                print "%d.\t%s:\t%s" % (index, prop, str(value))
     else:
         print "\nNo property retrieved"
 
