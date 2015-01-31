@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-
 from wat.lib import components, search
 from wat.lib.components import WatComponent
 from wat.lib.exceptions import InvalidTypeError, PropertyNotAchievedError, PropertyDoesNotExist, WatError, \
@@ -114,7 +112,7 @@ class RelaxedGraphPlan(object):
         def equivalent_actions(self):
             """Two actions a1 and a2 are equivalent iff postcondition(a1) = postcondition(a2)
             :return: all the actions in the current action layer, grouped by postcondition provided
-            :rtype: dict[WatComponent]
+            :rtype: dict[set[WatComponent]]
             """
             equivalent_actions = dict()
             for action in self.actions:
@@ -310,6 +308,9 @@ class RelaxedGraphPlan(object):
                             # if no goal was specified mantain all actions as side-effect of
                             # choosing as needed all the precondition in the last action layer
                             precondition_needed = planning_graph.action_layers[-1].preconditions
+                        # keep the goal state as precondition needed to be sure that all the goal components
+                        # will be mantained even if in different layers
+                        precondition_needed = precondition_needed.union(planning_graph.goal_state)
                         # clean up all the unused actions (those with useless postcondition)
                         for action in action_layer.actions.copy():
                             if action.postcondition not in precondition_needed:
